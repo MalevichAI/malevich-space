@@ -1,8 +1,11 @@
 [tool.poetry]
-name = "space"
+name = "malevich-space"
 version = "0.1.1"
-description = ""
+description = "SDK for Malevich Space"
 authors = ["Zak Davydov <zak@onjulius.co>"]
+license = "Apache 2"
+homepage = "https://github.com/MalevichAI/space"
+repository = "https://github.com/MalevichAI/space"
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -17,10 +20,52 @@ pydantic = "^2.3.0"
 aiohttp = "^3.8.5"
 
 [tool.poetry.dev-dependencies]
+ruff = "^0.0.291"
+pytest = "^7.4.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-space = "space.cli.cli:main"
+space = "malevich_space.cli.cli:main"
+
+[tool.ruff]
+# Enable the pycodestyle (`E`) and Pyflakes (`F`) rules by default.
+# Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
+# McCabe complexity (`C901`) by default.
+select=["E", "F", "I", "W", "N", "UP", "ANN",]
+ignore=["ANN101", "I001", "F403", "ANN002", "ANN003", "F405"]
+
+# Allow autofix for all enabled rules (when `--fix`) is provided.
+fixable = ["ALL"]
+unfixable = []
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+per-file-ignores = {}
+
+# Same as Black.
+line-length = 88

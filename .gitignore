@@ -166,3 +166,5 @@ projects/flows/tmp/
 .DS_STORE
 
 config/
+.ruff_cache
+poetry.lock
