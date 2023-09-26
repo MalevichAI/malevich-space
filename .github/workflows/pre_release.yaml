@@ -21,7 +21,7 @@ jobs:
              export TEST_CORE_CONN_URL=${{ vars.TEST_CORE_CONN_URL }} && \
              export TEST_SPACE_SA_USERNAME=${{ vars.TEST_SPACE_SA_USERNAME }} && \
              export TEST_SPACE_PASSWORD=${{ secrets.TEST_SPACE_PASSWORD }} && \
-             export TEST_SPACE_SA_PASSWORD=${{ secrets.TEST_SPACE_SA_PASSWORD }} && \
+             export TEST_SPACE_SA_PASSWORD=${{ secrets.TEST_SPACE_SA_PASSWORD }}
       - run: echo $TEST_SPACE_GQL_URL
       - run: poetry run pytest
       - run: poetry config repositories.testpypi https://test.pypi.org/legacy/
