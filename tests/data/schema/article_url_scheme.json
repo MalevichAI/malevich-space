@@ -1,0 +1,18 @@
+{
+    "$id": "article_url",
+    "required": ["article_url", "article_title", "source_name", "rss_feed_url"],
+    "properties": {
+        "article_url": {
+            "type": "string"
+        },
+        "article_title": {
+            "type": "string"
+        },
+        "source_name": {
+            "type": "string"
+        },
+        "rss_feed_url": {
+            "type": "string"
+        }
+    }
+}

@@ -1,0 +1,33 @@
+test.io.whywhy.preprocess:
+  visibility:
+    - private
+  name: "whywhy demo v2"
+  description: "News analysis pipeline that fetches the articles from the RSS feeds and sends brief summary with top sentences that match specific criteria"
+  designed_for_use_case:
+    - title: Send an email with recent news summary that matches specific criteria
+      body: Summarise recent news articles matching specific factuality/sentiment criteria and send the report by email
+  not_designed_for_use_case:
+    - title: List most recent articles from the RSS feed
+      body: Parse RSS feed URL to retrieve the list with the most recent news articles from it
+    - title: Determine the subjectivity of the news article
+      body: Accept news article sentences, apply this component and get subjectivity scores for every sentence
+    - title: Determine the sentiment of the news article
+      body: Accept news article sentences, apply this component and get the sentiment scores for every sentence
+  flow:
+    is_demo: true
+    components:
+      sources:
+        reverse_id: io.whywhy.sources
+        offsetX: 0
+        offsetY: 0
+      rss:
+        reverse_id: io.whywhy.rss
+        offsetX: 10
+        offsetY: 10
+        app:
+          active_op:
+            input: rss_input
+            processor: rss_to_articles
+            output: article_url_output
+        depends:
+          sources:

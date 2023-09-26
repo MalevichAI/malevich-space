@@ -1,0 +1,15 @@
+test.io.whywhy.sources:
+  visibility:
+    - private
+  name: "Sources collection"
+  description: "List of top news RSS feeds"
+  designed_for_use_case:
+    - title: Get list of RSS feeds
+      body: Get list of RSS feeds, for use cases like news analytics, news summarization; get the RSS feed for the news websites; access the Guardian RSS feed
+  collection:
+    path: data/rss_feed_sample.csv
+    core_alias: rss_sources
+    schema_core_id: source_scheme
+  schema_metadata:
+    source_scheme:
+      raw_path: schema/source_scheme.json

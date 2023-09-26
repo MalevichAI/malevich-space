@@ -185,3 +185,7 @@ class BaseService(ABC):
     @abstractmethod
     def get_parsed_component_by_reverse_id(self, reverse_id: str) -> schema.LoadedComponentSchema | None:
         raise NotImplementedError("Method not implemented")
+
+    @abstractmethod
+    def wipe_component(self, uid: Optional[str] = None, reverse_id: Optional[str] = None) -> bool:
+        raise NotImplementedError

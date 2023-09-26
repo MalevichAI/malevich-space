@@ -1,0 +1,12 @@
+{
+    "$id": "rss_source",
+    "required": ["source_name", "rss_feed_url"],
+    "properties": {
+        "source_name": {
+            "type": "string"
+        },
+        "rss_feed_url": {
+            "type": "string"
+        }
+    }
+}

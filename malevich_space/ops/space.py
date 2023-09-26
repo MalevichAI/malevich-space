@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 
 import requests
 
@@ -399,3 +399,11 @@ class SpaceOps(BaseService):
     def run_task(self, *args, **kwargs) -> str:
         result = self.client.execute(client.run_task, variable_values=kwargs)
         return result["runWithStatus"]["details"]["uid"]
+
+    def wipe_component(self, uid: Optional[str] = None, reverse_id: Optional[str] = None) -> bool:
+        kwargs = {
+            "uid": uid,
+            "reverse_id": reverse_id
+        }
+        result = self.client.execute(client.wipe_component, variable_values=kwargs)
+        return result["component"]["wipe"]

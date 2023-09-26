@@ -1,0 +1,39 @@
+test.io.whywhy.rss:
+  visibility:
+    - private
+  name: "Load RSS feed"
+  description: "Based on the link to the RSS feed, load the news articles from it and output the dataframe, where each row is one article"
+  designed_for_use_case:
+    - title: List most recent articles from the RSS feed
+      body: Parse RSS feed and extract the news articles; retrieve the latest news articles from the RSS feed; get all the articles from the RSS feed
+  not_designed_for_use_case:
+    - title: Parse news article by URL and output article text with metadata
+      body: Parse HTML behind a news article to retrieve text, cover image, metadata
+    - title: Retrieve opengraph tags from the news article
+      body: Retrieve tags that conform to the opengraph protocol to understand how news article provider wants the article to be indexed for SEO purposes
+  app:
+    container_ref: "registry.gitlab.com/h1054/julius-whywhy/whywhy-article-pp:rss-feed-parser"
+    ops:
+      rss_input:
+        type: "input"
+        input_schema:
+        - source_scheme
+        requires:
+          sources:
+            type:
+            - "collection"
+      rss_to_articles:
+        type: "processor"
+        input_schema:
+        - source_scheme
+        output_schema:
+        - article_url_scheme
+      article_url_output:
+        type: "output"
+        output_schema:
+        - article_url_scheme
+  schema_metadata:
+    source_scheme:
+      raw_path: schema/source_scheme.json
+    article_url_scheme:
+      raw_path: schema/article_url_scheme.json
