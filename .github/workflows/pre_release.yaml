@@ -16,6 +16,8 @@ jobs:
       - name: Add Poetry to path
         run: echo "${HOME}/.poetry/bin" >> $GITHUB_PATH
       - run: poetry install
+      - run: echo $TEST_SPACE_AUTH_URL
+      - run: echo $TEST_SPACE_GQL_URL
       - run: poetry run pytest
       - run: poetry config repositories.testpypi https://test.pypi.org/legacy/
       - run: poetry config pypi-token.testpypi ${{ secrets.TEST_PYPI_API_KEY }}
