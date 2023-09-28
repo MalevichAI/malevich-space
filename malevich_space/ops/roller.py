@@ -5,10 +5,15 @@ from typing import Any
 
 import malevich_space.schema as schema
 
+from malevich_space.parser import YAMLParser
+from malevich_space.constants import ACTIVE_SETUP_PATH
+
 from .space import SpaceOps
 from .component_provider import ComponentProvider
 
 from .component_manager import ComponentManager
+
+from .env import get_active
 
 
 HostSA = tuple[schema.LoadedHostSchema | None, schema.LoadedSASchema | None]
@@ -18,6 +23,7 @@ class RollerOps:
     def __init__(
         self,
         config: schema.Setup,
+        comp_dir: str,
         path: str | None = None,
         comp_provider: ComponentProvider | None = None
     ) -> None:
@@ -40,6 +46,7 @@ class RollerOps:
             space=self.space,
             host=self.host,
             sa=self.sa,
+            comp_dir=comp_dir,
             component_provider=self.comp_provider,
         )
 
@@ -117,3 +124,16 @@ class RollerOps:
     def change_task_state(self, task: schema.LoadedTaskSchema, target_state: str):
         self.space.change_task_state(task_id=task.uid, target_state=target_state)
         logging.info(f"Updated task state ({task.uid}) -> {target_state}")
+
+    def create_scheme(self, name: str, path: str) -> str:
+        with open(path, "r") as f:
+            data = f.read()
+            return self.space.create_scheme(core_id=name, name=name, raw=data)
+
+
+def local_roller(setup: str | None, comp_dir: str | str = None) -> RollerOps:
+    if setup:
+        config = schema.Setup(**YAMLParser.parse_yaml(setup))
+    else:
+        config = get_active(ACTIVE_SETUP_PATH)
+    return RollerOps(config, path=comp_dir, comp_dir=comp_dir)

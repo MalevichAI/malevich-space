@@ -407,3 +407,22 @@ class SpaceOps(BaseService):
         }
         result = self.client.execute(client.wipe_component, variable_values=kwargs)
         return result["component"]["wipe"]
+
+    def get_api_token_by_name(self, name: str) -> str | None:
+        result = self.client.execute(client.api_key_by_name, variable_values={"name": name})
+        by_name = result["apiKey"]["byName"]
+        if "details" in by_name:
+            return by_name["details"]
+        return None
+
+    def create_endpoint(self, task_id: str, alias: str | None, token: str | None) -> str:
+        kwargs = {
+            "task_id": task_id,
+            "alias": alias,
+            "api_key": []
+        }
+        if token:
+            token_id = self.get_api_token_by_name(name=token)
+            kwargs["api_key"] = [token_id]
+        result = self.client.execute(client.create_task_endpoint, variable_values=kwargs)
+        return result["task"]["createEndpoint"]["details"]["uid"]

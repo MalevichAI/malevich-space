@@ -21,3 +21,5 @@ DEFAULT_VERSION_NAME = "0.1.0"
 DEFAULT_VERSION_STATUS = "active"
 
 DEFAULT_VERSION_UPDATE_MD = "It ain't much and it ain't working..."
+
+SETUP_HELP = "Path to space .yaml configuration"

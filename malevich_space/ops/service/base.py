@@ -189,3 +189,7 @@ class BaseService(ABC):
     @abstractmethod
     def wipe_component(self, uid: Optional[str] = None, reverse_id: Optional[str] = None) -> bool:
         raise NotImplementedError
+
+    @abstractmethod
+    def create_endpoint(self, task_id: str, alias: str | None, token: str | None) -> str:
+        raise NotImplementedError

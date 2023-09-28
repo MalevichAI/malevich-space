@@ -1,6 +1,8 @@
 import json
 import logging
 
+import jls_utils as jls
+
 import malevich_space.schema as schema
 import malevich_space.constants as constants
 
@@ -20,12 +22,15 @@ class ComponentManager:
         space: BaseService,
         host: schema.LoadedHostSchema,
         sa: schema.LoadedSASchema,
+        comp_dir: str,
         component_provider: BaseComponentProvider | None = None
     ) -> None:
         self.space = space
 
         self.host = host
         self.sa = sa
+
+        self.comp_dir = comp_dir
 
         self.component_provider = component_provider
 
@@ -181,9 +186,25 @@ class ComponentManager:
         collection: schema.CollectionAliasSchema,
         attach2version_id: str,
     ) -> schema.LoadedComponentSchema | None:
+        auth = (self.sa.core_username, self.sa.core_password)
+        jls.set_host_port(self.host.conn_url)
+        core_id = jls.create_collection_from_file(
+            f"{self.comp_dir}/{collection.path}", auth=auth
+        )
+        collection.core_id = core_id
+        if collection.schema_core_id:
+            try:
+                jls.fix_scheme(core_id, collection.schema_core_id, auth=auth)
+            except Exception as e:
+                logging.exception(e)
+
+        print("UPLOADED COLLECTION WITH CORE ID")
+        print(core_id)
+
         ca_id = self.space.create_collection(
             sa_id=self.sa.uid,
             core_alias=collection.core_alias,
+            core_id=core_id,
             schema_core_id=collection.schema_core_id,
         )
         self.space.create_collection_in_version(version_id=attach2version_id, ca_id=ca_id)
