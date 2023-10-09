@@ -46,6 +46,8 @@ def _get_from_env() -> schema.Setup | None:
         space=schema.SpaceSetup(
             auth_url=auth_url,
             gql_url=gql_url,
+            username=space_username,
+            password=space_password,
             host=schema.HostSchema(
                 conn_url=core_host,
                 sa=schema.SASchema(
