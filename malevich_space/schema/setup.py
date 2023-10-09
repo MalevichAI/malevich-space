@@ -17,7 +17,7 @@ class SpaceSetup(BaseModel):
         return f"{self.gql_url}"
 
     def __str__(self) -> str:
-        return f"{self.gql_url, self.username, self.password}"
+        return f"{self.gql_url}"
 
 
 class Setup(BaseModel):
