@@ -26,7 +26,6 @@ def _get_local_active() -> schema.Setup | None:
 
 
 def _get_from_env() -> schema.Setup | None:
-    
     auth_url = os.environ.get("TEST_SPACE_AUTH_URL")
     gql_url = os.environ.get("TEST_SPACE_GQL_URL")
     space_username = os.environ.get("TEST_SPACE_USERNAME")
@@ -39,7 +38,6 @@ def _get_from_env() -> schema.Setup | None:
     assert auth_url and gql_url
     assert space_token or (space_username and space_password)
     assert core_host and core_username and core_password
-    print(core_username, core_password)
     config = schema.Setup(
         space=schema.SpaceSetup(
             auth_url=auth_url,
@@ -57,6 +55,7 @@ def _get_from_env() -> schema.Setup | None:
             )
         )
     )
+    
     return config
 
 
