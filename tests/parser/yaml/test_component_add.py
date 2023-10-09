@@ -26,8 +26,6 @@ def _get_local_active() -> schema.Setup | None:
 
 
 def _get_from_env() -> schema.Setup | None:
-
-    print("GETTING FROM ENV: ")
     
     auth_url = os.environ.get("TEST_SPACE_AUTH_URL")
     gql_url = os.environ.get("TEST_SPACE_GQL_URL")
@@ -59,7 +57,6 @@ def _get_from_env() -> schema.Setup | None:
             )
         )
     )
-    print(config.space)
     return config
 
 
