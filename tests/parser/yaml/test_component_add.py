@@ -57,7 +57,7 @@ def _get_from_env() -> schema.Setup | None:
             )
         )
     )
-
+    print(config.space)
     return config
 
 
