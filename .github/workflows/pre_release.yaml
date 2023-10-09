@@ -3,7 +3,6 @@ on:
   push:
     tags:
       - '*.*.*'
-    branches: [ramprin-workflow]
 jobs:
   test_pypi_release:
     runs-on: ubuntu-latest
