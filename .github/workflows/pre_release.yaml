@@ -23,8 +23,8 @@ jobs:
           TEST_CORE_CONN_URL: ${{vars.TEST_CORE_CONN_URL}}
           TEST_SPACE_AUTH_URL: ${{vars.TEST_SPACE_AUTH_URL}} 
           TEST_SPACE_GQL_URL: ${{vars.TEST_SPACE_GQL_URL}}
-          TEST_SPACE_SA_USERNAME: ${{vars.TEST_SPACE_SA_USERNAME}}
-          TEST_SPACE_USERNAME: ${{vars.TEST_SPACE_USERNAME}}
+          # TEST_SPACE_SA_USERNAME: ${{vars.TEST_SPACE_SA_USERNAME}}
+          # TEST_SPACE_USERNAME: ${{vars.TEST_SPACE_USERNAME}}
           TEST_SPACE_PASSWORD: ${{secrets.TEST_SPACE_PASSWORD}}
           TEST_SPACE_SA_PASSWORD: ${{secrets.TEST_SPACE_SA_PASSWORD}}
       - run: poetry config repositories.testpypi https://test.pypi.org/legacy/
