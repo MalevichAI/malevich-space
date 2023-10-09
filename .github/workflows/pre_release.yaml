@@ -18,7 +18,7 @@ jobs:
         run: echo "${HOME}/.poetry/bin" >> $GITHUB_PATH
       - run: poetry install
       - run: |
-          echo $TEST_CORE_CONN_URL
+          echo ${{env.TEST_CORE_CONN_URL}}
           echo ${{env.TEST_CORE_CONN_URL}}
           poetry run pytest
         env:
