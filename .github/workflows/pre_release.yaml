@@ -17,7 +17,9 @@ jobs:
       - name: Add Poetry to path
         run: echo "${HOME}/.poetry/bin" >> $GITHUB_PATH
       - run: poetry install
-      - run: poetry run pytest
+      - run: |
+          echo $TEST_CORE_CONN_URL
+          poetry run pytest
         env:
           TEST_CORE_CONN_URL: ${{env.TEST_CORE_CONN_URL}}
           TEST_SPACE_AUTH_URL: ${{env.TEST_SPACE_AUTH_URL}} 
