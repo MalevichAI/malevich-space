@@ -19,7 +19,7 @@ jobs:
       - run: poetry install
       - run: |
           echo ${{vars.TEST_CORE_CONN_URL}}
-          echo "$TEST_CORE_CONN_URL"
+          echo "$TEST_SPACE_PASSWORD"
           poetry run pytest
         env:
           TEST_CORE_CONN_URL: ${{vars.TEST_CORE_CONN_URL}}
