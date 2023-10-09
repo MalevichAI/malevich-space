@@ -27,6 +27,8 @@ jobs:
           TEST_SPACE_GQL_URL: ${{vars.TEST_SPACE_GQL_URL}}
           TEST_SPACE_SA_USERNAME: ${{vars.TEST_SPACE_SA_USERNAME}}
           TEST_SPACE_USERNAME: ${{vars.TEST_SPACE_USERNAME}}
+          TEST_SPACE_PASSWORD: ${{secrets.TEST_SPACE_PASSWORD}}
+          TEST_SPACE_SA_PASSWORD: ${{secrets.TEST_SPACE_SA_PASSWORD}}
       - run: poetry config repositories.testpypi https://test.pypi.org/legacy/
       - run: poetry config pypi-token.testpypi ${{ secrets.TEST_PYPI_API_KEY }}
       - name: Publish package
