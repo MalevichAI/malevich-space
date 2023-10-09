@@ -38,11 +38,12 @@ def _get_from_env() -> schema.Setup | None:
     assert auth_url and gql_url
     assert space_token or (space_username and space_password)
     assert core_host and core_username and core_password
-
     config = schema.Setup(
         space=schema.SpaceSetup(
             auth_url=auth_url,
             gql_url=gql_url,
+            username=space_username,
+            password=space_password,
             host=schema.HostSchema(
                 conn_url=core_host,
                 sa=schema.SASchema(
@@ -54,7 +55,7 @@ def _get_from_env() -> schema.Setup | None:
             )
         )
     )
-
+    
     return config
 
 
