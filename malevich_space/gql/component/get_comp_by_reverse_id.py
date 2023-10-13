@@ -105,7 +105,20 @@ get_comp_with_reverse_id = gql(
                 node {
                   details {
                     uid
+                    name
                     coreId
+                    doc
+                    finishMsg
+                    tl
+                    query
+                    mode
+                    collectionsNames
+                    extraCollectionsNames
+                    collectionOutNames
+                    args {
+                      argName
+                      argType
+                    }
                   }
                   deps {
                     details {

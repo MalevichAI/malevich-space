@@ -4,13 +4,14 @@ from gql import gql
 create_collection_alias = gql(
     """
     mutation CreateCollectionAlias(
-        $sa_id: String!,
+        $host_id: String!,
         $core_id: String,
         $core_alias: String,
-        $schema_core_id: String
+        $schema_core_id: String,
+        $docs: [String!]
     ) {
       collectionAliases {
-        create(saId: $sa_id, input: {
+        create(docs: $docs, hostId: $host_id, input: {
           node: {
             coreId: $core_id
             coreAlias: $core_alias

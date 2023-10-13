@@ -34,6 +34,13 @@ def build(component: str, setup: Optional[str] = typer.Option(None, help=SETUP_H
 
 
 @app.command()
+def ops(component: str, setup: Optional[str] = typer.Option(None, help=SETUP_HELP)):
+    roller = local_roller(setup, None)
+    loaded = roller.space.get_parsed_component_by_reverse_id(reverse_id=component)
+    typer.echo(loaded.app.ops)
+
+
+@app.command()
 def boot(
     task_id: str,
     exec_mode: str = "batch",

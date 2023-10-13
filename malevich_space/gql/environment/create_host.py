@@ -14,6 +14,18 @@ host_create = gql(
           details {
             uid
           }
+           mySaOnHost {
+            edges {
+              node {
+                details {
+                  uid
+                  alias
+                  coreUsername
+                  corePassword
+                }
+              }
+            }
+          }
         }
       }
     }
