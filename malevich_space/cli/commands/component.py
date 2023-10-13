@@ -7,25 +7,12 @@ import typer
 
 import malevich_space.schema as schema
 
-from malevich_space.ops import RollerOps
-from malevich_space.ops import env as env
+from malevich_space.constants import SETUP_HELP
 
-from malevich_space.parser import YAMLParser
-from malevich_space.constants import ACTIVE_SETUP_PATH
-
-
-SETUP_HELP = "Path to space .yaml configuration"
+from malevich_space.ops.roller import local_roller
 
 
 app = typer.Typer()
-
-
-def _local_roller(setup: str | None, comp_dir: str | str = None) -> RollerOps:
-    if setup:
-        config = schema.Setup(**YAMLParser.parse_yaml(setup))
-    else:
-        config = env.get_active(ACTIVE_SETUP_PATH)
-    return RollerOps(config, path=comp_dir)
 
 
 @app.command()
@@ -34,16 +21,23 @@ def add(
     component: str,
     setup: Optional[str] = typer.Option(None, help=SETUP_HELP),
 ):
-    roller = _local_roller(setup, comp_dir)
+    roller = local_roller(setup, comp_dir)
     comp = roller.comp_provider.get_by_reverse_id(component)
     _ = roller.component(comp, version_mode=schema.VersionMode.MINOR)
 
 
 @app.command()
 def build(component: str, setup: Optional[str] = typer.Option(None, help=SETUP_HELP)):
-    roller = _local_roller(setup, None)
+    roller = local_roller(setup, None)
     loaded = roller.space.get_parsed_component_by_reverse_id(reverse_id=component)
     roller.build(loaded)
+
+
+@app.command()
+def ops(component: str, setup: Optional[str] = typer.Option(None, help=SETUP_HELP)):
+    roller = local_roller(setup, None)
+    loaded = roller.space.get_parsed_component_by_reverse_id(reverse_id=component)
+    typer.echo(loaded.app.ops)
 
 
 @app.command()
@@ -52,7 +46,7 @@ def boot(
     exec_mode: str = "batch",
     setup: Optional[str] = typer.Option(None, help=SETUP_HELP),
 ):
-    roller = _local_roller(setup, None)
+    roller = local_roller(setup, None)
     loaded_task = schema.LoadedTaskSchema(uid=task_id)
     roller.boot(core_task=loaded_task, exec_mode=exec_mode)
 
@@ -63,7 +57,7 @@ def run(
     payload_path: Optional[str] = None,
     setup: Optional[str] = typer.Option(None, help=SETUP_HELP),
 ):
-    roller = _local_roller(setup, None)
+    roller = local_roller(setup, None)
     payload = None
     if payload_path:
         with open(payload_path) as f:
@@ -74,7 +68,7 @@ def run(
 
 @app.command()
 def stop(task_id: str, setup: Optional[str] = typer.Option(None, help=SETUP_HELP)):
-    roller = _local_roller(setup, None)
+    roller = local_roller(setup, None)
     loaded_task = schema.LoadedTaskSchema(uid=task_id)
     roller.change_task_state(task=loaded_task, target_state="stop")
 
@@ -85,7 +79,7 @@ def test(
     component: str,
     setup: Optional[str] = typer.Option(None, help=SETUP_HELP),
 ):
-    roller = _local_roller(setup, comp_dir)
+    roller = local_roller(setup, comp_dir)
     comp = roller.comp_provider.get_by_reverse_id(component)
     loaded = roller.component(comp, version_mode=schema.VersionMode.MINOR)
     tasks = roller.build(loaded)
@@ -97,3 +91,25 @@ def test(
         except Exception as e:
             logging.exception(e)
         roller.change_task_state(task=loaded_task, target_state="stop")
+
+
+@app.command()
+def endpoint(
+        task_id: str,
+        alias: Optional[str] = typer.Argument(None, help="Endpoint alias"),
+        token: Optional[str] = typer.Option(None, help="Name of token to use"),
+        setup: Optional[str] = typer.Option(None, help=SETUP_HELP),
+):
+    roller = local_roller(setup, None)
+    created = roller.space.create_endpoint(task_id=task_id, alias=alias, token=token)
+    logging.info(f">> Endpoint created - https://<api_host>/e/{alias if alias else created}")
+
+
+@app.command()
+def wipe(reverse_id: str, setup: Optional[str] = typer.Option(None, help=SETUP_HELP)):
+    try:
+        roller = local_roller(setup, None)
+        roller.space.wipe_component(reverse_id=reverse_id)
+        logging.info(f">> {reverse_id} successfully wiped")
+    except Exception as e:
+        logging.exception(f"Failed to wipe {reverse_id} ({e})")

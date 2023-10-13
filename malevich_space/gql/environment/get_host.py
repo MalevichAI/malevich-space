@@ -3,7 +3,7 @@ from gql import gql
 
 get_host = gql(
     """
-    query GetHosts($url: String, $sa_core_id: String) {
+    query GetHosts($url: String) {
       user {
         me {
           hosts(url: $url) {
@@ -14,7 +14,7 @@ get_host = gql(
                   alias
                   connUrl
                 }
-                mySaOnHost(coreId: $sa_core_id) {
+                mySaOnHost {
                   edges {
                     node {
                       details {

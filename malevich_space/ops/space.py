@@ -1,10 +1,11 @@
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import requests
 
 from gql import Client
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport.websockets import WebsocketsTransport
+from graphql import DocumentNode, ExecutionResult
 
 import malevich_space.gql as client
 import malevich_space.schema as schema
@@ -24,6 +25,15 @@ class SpaceOps(BaseService):
             return self.org.uid
         return None
 
+    def _org_request(
+            self,
+            request: DocumentNode,
+            variable_values: Optional[dict[str, Any]] = None
+    ) -> Union[dict[str, Any], ExecutionResult]:
+        if variable_values and self.org:
+            variable_values["org_id"] = self.org.uid
+        return self.client.execute(request, variable_values=variable_values)
+
     def auth(self, username: str, password: str):
         fields = {"username": username, "password": password}
         response = requests.post(self.space_setup.auth_url, fields)
@@ -35,7 +45,9 @@ class SpaceOps(BaseService):
         transport = AIOHTTPTransport(url=self.space_setup.gql_url, headers=headers)
 
         ws_transport = Client(
-            transport=WebsocketsTransport(url=self.space_setup.ws_url), fetch_schema_from_transport=True, execute_timeout=60
+            transport=WebsocketsTransport(url=self.space_setup.ws_url),
+            fetch_schema_from_transport=True,
+            execute_timeout=60
         ) if self.space_setup.ws_url else None
 
         return Client(
@@ -70,13 +82,9 @@ class SpaceOps(BaseService):
             sa=[self._parse_raw_sa(sa["node"]) for sa in raw["mySaOnHost"]["edges"]],
         )
 
-    def create_host(self, *args, **kwargs) -> str:
+    def create_host(self, *args, **kwargs) -> schema.LoadedHostSchema:
         result = self.client.execute(client.host_create, variable_values=kwargs)
-        return result["hosts"]["create"]["details"]["uid"]
-
-    def create_sa(self, *args, **kwargs) -> str:
-        result = self.client.execute(client.sa_create, variable_values=kwargs)
-        return result["host"]["createSa"]["details"]["uid"]
+        return self._parse_raw_host(result)
 
     def get_my_hosts(self, *args, **kwargs) -> list[schema.LoadedHostSchema]:
         result = self.client.execute(client.get_host, variable_values=kwargs)
@@ -122,7 +130,7 @@ class SpaceOps(BaseService):
         return result["version"]["addUnderlyingFlow"]["uid"]
 
     def create_collection(self, *args, **kwargs) -> str:
-        result = self.client.execute(client.create_collection_alias, variable_values=kwargs)
+        result = self._org_request(client.create_collection_alias, variable_values=kwargs)
         return result["collectionAliases"]["create"]["details"]["uid"]
 
     def create_collection_in_version(self, *args, **kwargs) -> str:
@@ -243,10 +251,25 @@ class SpaceOps(BaseService):
             input_schema = _parse_schema("inputSchema")
             output_schema = _parse_schema("outputSchema")
 
+            details = op_node["details"]
+
             out.append(
                 schema.LoadedOpSchema(
-                    core_id=op_node["details"]["coreId"],
+                    core_id=details["coreId"],
+                    name=details["name"],
+                    doc=details["doc"],
+                    finish_msg=details["finishMsg"],
+                    tl=details["tl"],
+                    query=details["query"],
+                    mode=details["mode"],
+                    collections_names=details["collectionsNames"],
+                    extra_collections_names=details["extraCollectionsNames"],
+                    collection_out_names=details["collectionOutNames"],
                     type=op_rel["type"],
+                    args=[
+                        schema.OpArg(arg_name=arg["argName"], arg_type=arg["argType"])
+                        for arg in details["args"]
+                    ] if details["args"] else None,
                     input_schema=[s["details"]["coreId"] for s in input_schema],
                     output_schema=[s["details"]["coreId"] for s in output_schema],
                     uid=op_node["details"]["uid"],
@@ -379,7 +402,7 @@ class SpaceOps(BaseService):
         )
 
     def build_task(self, *args, **kwargs) -> list[str]:
-        result = self.client.execute(client.build_task, variable_values=kwargs)
+        result = self._org_request(client.build_task, variable_values=kwargs)
         return [
             created["details"]["uid"] for created in result["flow"]["buildCoreTask"]
         ]
@@ -397,7 +420,7 @@ class SpaceOps(BaseService):
         return result["collectionAlias"]["update"]["uid"]
 
     def run_task(self, *args, **kwargs) -> str:
-        result = self.client.execute(client.run_task, variable_values=kwargs)
+        result = self._org_request(client.run_task, variable_values=kwargs)
         return result["runWithStatus"]["details"]["uid"]
 
     def wipe_component(self, uid: Optional[str] = None, reverse_id: Optional[str] = None) -> bool:
@@ -407,3 +430,22 @@ class SpaceOps(BaseService):
         }
         result = self.client.execute(client.wipe_component, variable_values=kwargs)
         return result["component"]["wipe"]
+
+    def get_api_token_by_name(self, name: str) -> str | None:
+        result = self.client.execute(client.api_key_by_name, variable_values={"name": name})
+        by_name = result["apiKey"]["byName"]
+        if "details" in by_name:
+            return by_name["details"]
+        return None
+
+    def create_endpoint(self, task_id: str, alias: str | None, token: str | None) -> str:
+        kwargs = {
+            "task_id": task_id,
+            "alias": alias,
+            "api_key": []
+        }
+        if token:
+            token_id = self.get_api_token_by_name(name=token)
+            kwargs["api_key"] = [token_id]
+        result = self.client.execute(client.create_task_endpoint, variable_values=kwargs)
+        return result["task"]["createEndpoint"]["details"]["uid"]

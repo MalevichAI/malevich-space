@@ -5,19 +5,21 @@ from typing import Any
 
 import malevich_space.schema as schema
 
+from malevich_space.parser import YAMLParser
+from malevich_space.constants import ACTIVE_SETUP_PATH
+
 from .space import SpaceOps
 from .component_provider import ComponentProvider
-
 from .component_manager import ComponentManager
 
-
-HostSA = tuple[schema.LoadedHostSchema | None, schema.LoadedSASchema | None]
+from .env import get_active
 
 
 class RollerOps:
     def __init__(
         self,
         config: schema.Setup,
+        comp_dir: str,
         path: str | None = None,
         comp_provider: ComponentProvider | None = None
     ) -> None:
@@ -27,7 +29,7 @@ class RollerOps:
 
         self.space = SpaceOps(space_setup=self.config.space)
 
-        self.host, self.sa = self.ensure_host(self.config.space.host)
+        self.host = self.ensure_host(self.config.space.host)
 
         self.comp_provider = None
         if comp_provider:
@@ -39,37 +41,21 @@ class RollerOps:
         self.comp_manager = ComponentManager(
             space=self.space,
             host=self.host,
-            sa=self.sa,
+            comp_dir=comp_dir,
             component_provider=self.comp_provider,
         )
 
-    def _load_host_sa(self, local_host: schema.HostSchema) -> HostSA:
-        target_sa_id = None
-        if local_host.sa:
-            target_sa_id = local_host.sa.core_username
-        hosts = self.space.get_my_hosts(
-            url=local_host.conn_url, sa_core_id=target_sa_id
-        )
+    def _load_host(self, local_host: schema.HostSchema) -> schema.LoadedHostSchema | None:
+        hosts = self.space.get_my_hosts(url=local_host.conn_url)
         if hosts:
-            loaded_host = hosts[0]
-            if loaded_host.sa:
-                return loaded_host, loaded_host.sa[0]
-            return loaded_host, None
-        return None, None
+            return hosts[0]
+        return None
 
-    def ensure_host(self, local_host: schema.HostSchema) -> HostSA:
-        loaded_host, loaded_sa = self._load_host_sa(local_host)
+    def ensure_host(self, local_host: schema.HostSchema) -> schema.LoadedHostSchema:
+        loaded_host = self._load_host(local_host)
         if not loaded_host:
-            host_id = self.space.create_host(
-                alias=local_host.alias, conn_url=local_host.conn_url
-            )
-        else:
-            host_id = loaded_host.uid
-        if not loaded_sa and local_host.sa:
-            params = local_host.sa.__dict__
-            params["host_id"] = host_id
-            _ = self.space.create_sa(**params)
-        return self._load_host_sa(local_host)
+            loaded_host = self.space.create_host(alias=local_host.alias, conn_url=local_host.conn_url)
+        return loaded_host
 
     def component(
         self,
@@ -89,7 +75,7 @@ class RollerOps:
         """
         if not comp.flow:
             return None
-        task_id = self.space.build_task(flow_id=comp.flow.uid, sa_id=self.sa.uid)
+        task_id = self.space.build_task(flow_id=comp.flow.uid, host_id=self.host.uid)
         logging.info(f"Built {comp.reverse_id} with task_id (s): {task_id}")
         return task_id
 
@@ -117,3 +103,16 @@ class RollerOps:
     def change_task_state(self, task: schema.LoadedTaskSchema, target_state: str):
         self.space.change_task_state(task_id=task.uid, target_state=target_state)
         logging.info(f"Updated task state ({task.uid}) -> {target_state}")
+
+    def create_scheme(self, name: str, path: str) -> str:
+        with open(path, "r") as f:
+            data = f.read()
+            return self.space.create_scheme(core_id=name, name=name, raw=data)
+
+
+def local_roller(setup: str | None, comp_dir: str | str = None) -> RollerOps:
+    if setup:
+        config = schema.Setup(**YAMLParser.parse_yaml(setup))
+    else:
+        config = get_active(ACTIVE_SETUP_PATH)
+    return RollerOps(config, path=comp_dir, comp_dir=comp_dir)

@@ -1,6 +1,8 @@
 import json
 import logging
 
+import pandas as pd
+
 import malevich_space.schema as schema
 import malevich_space.constants as constants
 
@@ -19,14 +21,12 @@ class ComponentManager:
         self,
         space: BaseService,
         host: schema.LoadedHostSchema,
-        sa: schema.LoadedSASchema,
+        comp_dir: str,
         component_provider: BaseComponentProvider | None = None
     ) -> None:
         self.space = space
-
         self.host = host
-        self.sa = sa
-
+        self.comp_dir = comp_dir
         self.component_provider = component_provider
 
     @staticmethod
@@ -46,13 +46,14 @@ class ComponentManager:
         return ".".join(broken)
 
     def _app2version(
-        self, reverse_id: str, app: schema.AppSchema, attach2version_id: str
+        self, reverse_id: str, app: schema.AppSchema, attach2version_id: str, preload_op: bool = True
     ) -> schema.LoadedComponentSchema:
         app_id = self.space.create_app_in_version(
             version_id=attach2version_id,
             container_ref=app.container_ref,
             container_user=app.container_user,
             container_token=app.container_token,
+            preload_op=preload_op
         )
         if app.cfg:
             for cfg in app.cfg:
@@ -175,16 +176,25 @@ class ComponentManager:
                     )
         return self.space.get_parsed_component_by_reverse_id(reverse_id=src_comp_reverse_id)
 
+    def _get_df(self, file: str) -> pd.DataFrame:
+        return pd.read_csv(file)
+
+    def _get_json_docs(self, df: pd.DataFrame) -> list[str]:
+        return [row.to_json() for _, row in df.iterrows()]
+
     def _collection_alias2version(
         self,
         reverse_id: str,
         collection: schema.CollectionAliasSchema,
         attach2version_id: str,
     ) -> schema.LoadedComponentSchema | None:
+        src_collection_at_path = f"{self.comp_dir}/{collection.path}"
+        docs = self._get_json_docs(self._get_df(src_collection_at_path))
         ca_id = self.space.create_collection(
-            sa_id=self.sa.uid,
+            host_id=self.host.uid,
             core_alias=collection.core_alias,
             schema_core_id=collection.schema_core_id,
+            docs=docs
         )
         self.space.create_collection_in_version(version_id=attach2version_id, ca_id=ca_id)
         return self.space.get_parsed_component_by_reverse_id(reverse_id=reverse_id)
@@ -211,7 +221,7 @@ class ComponentManager:
             exists = self.space.get_schema(core_id=schema.core_id)
             if exists:
                 continue
-            self.space.create_scheme(core_id=schema.core_id, raw=json.dumps(schema.schema_data))
+            self.space.create_scheme(core_id=schema.core_id, raw=json.dumps(json.loads(schema.schema_data)))
 
     def _attach_use_case(self, comp_uid: str, uc: schema.UseCaseSchema, designed: bool):
         use_case = self.space.create_use_case(title=uc.title, body=uc.body, is_public_example=uc.is_public_example)

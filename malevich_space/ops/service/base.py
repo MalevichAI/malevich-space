@@ -11,10 +11,6 @@ class BaseService(ABC):
         raise NotImplementedError("Method not implemented")
 
     @abstractmethod
-    def create_sa(self, host_id: str, alias: str, core_username: str, core_password: str, *args, **kwargs):
-        raise NotImplementedError("Method not implemented")
-
-    @abstractmethod
     def get_my_hosts(self, url: Optional[str] = None, sa_core_id: Optional[str] = None, *args, **kwargs):
         raise NotImplementedError("Method not implemented")
 
@@ -72,7 +68,7 @@ class BaseService(ABC):
     @abstractmethod
     def create_collection(
             self,
-            sa_id: str,
+            host_id: str,
             core_id: Optional[str] = None,
             core_alias: Optional[str] = None,
             schema_core_id: Optional[str] = None,
@@ -188,4 +184,8 @@ class BaseService(ABC):
 
     @abstractmethod
     def wipe_component(self, uid: Optional[str] = None, reverse_id: Optional[str] = None) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    def create_endpoint(self, task_id: str, alias: str | None, token: str | None) -> str:
         raise NotImplementedError

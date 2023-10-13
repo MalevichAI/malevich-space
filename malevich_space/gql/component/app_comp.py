@@ -3,7 +3,14 @@ from gql import gql
 
 app_comp = gql(
     """
-    mutation AddApp($version_id: String!, $container_ref: String, $container_user: String, $container_token: String, $version_app_status: String) {
+    mutation AddApp(
+        $version_id: String!,
+        $container_ref: String,
+        $container_user: String,
+        $container_token: String,
+        $version_app_status: String,
+        $preload_op: Boolean
+    ) {
       version(uid: $version_id) {
         addUnderlyingApp(
           input: {
@@ -15,7 +22,8 @@ app_comp = gql(
             rel: {
               status: $version_app_status
             }
-        }
+          },
+          preloadOp: $preload_op  
         ) {
           uid
         }
