@@ -36,19 +36,20 @@ class SpaceOps(BaseService):
 
     def auth(self, username: str, password: str):
         fields = {"username": username, "password": password}
-        response = requests.post(self.space_setup.auth_url, fields)
+        response = requests.post(self.space_setup.auth_url(), fields)
         return response.json()["access_token"]
 
     def init_graphql(self) -> tuple[Client, Client]:
         headers = {"Authorization": "Bearer " + self.token}
 
-        transport = AIOHTTPTransport(url=self.space_setup.gql_url, headers=headers)
+        transport = AIOHTTPTransport(url=self.space_setup.graphql_url(), headers=headers)
 
+        ws_url = self.space_setup.ws_url()
         ws_transport = Client(
-            transport=WebsocketsTransport(url=self.space_setup.ws_url),
+            transport=WebsocketsTransport(url=ws_url),
             fetch_schema_from_transport=True,
             execute_timeout=60
-        ) if self.space_setup.ws_url else None
+        ) if ws_url else None
 
         return Client(
             transport=transport, fetch_schema_from_transport=True, execute_timeout=600
