@@ -118,6 +118,7 @@ get_comp_with_reverse_id = gql(
                     args {
                       argName
                       argType
+                      argOrder
                     }
                   }
                   deps {

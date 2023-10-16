@@ -9,6 +9,7 @@ from .schema import LoadedSchemaSchema
 class OpArg(BaseModel):
     arg_name: Optional[str]
     arg_type: Optional[str]
+    arg_order: Optional[int]
 
 
 class OpSchema(BaseModel):
@@ -37,6 +38,6 @@ class LoadedOpSchema(OpSchema):
 
     args: Optional[list[OpArg]]
 
-    input_schema_model: Sequence[LoadedSchemaSchema] = []
-    output_schema_model: Sequence[LoadedSchemaSchema] = []
+    input_schema: Sequence[LoadedSchemaSchema] = []
+    output_schema: Sequence[LoadedSchemaSchema] = []
     loaded_requires: Sequence[LoadedDepSchema] = []

@@ -255,6 +255,7 @@ class SpaceOps(BaseService):
 
             out.append(
                 schema.LoadedOpSchema(
+                    uid=op_node["details"]["uid"],
                     core_id=details["coreId"],
                     name=details["name"],
                     doc=details["doc"],
@@ -267,12 +268,23 @@ class SpaceOps(BaseService):
                     collection_out_names=details["collectionOutNames"],
                     type=op_rel["type"],
                     args=[
-                        schema.OpArg(arg_name=arg["argName"], arg_type=arg["argType"])
+                        schema.OpArg(arg_name=arg["argName"], arg_type=arg["argType"], arg_order=arg["argOrder"])
                         for arg in details["args"]
                     ] if details["args"] else None,
-                    input_schema=[s["details"]["coreId"] for s in input_schema],
-                    output_schema=[s["details"]["coreId"] for s in output_schema],
-                    uid=op_node["details"]["uid"],
+                    input_schema=[
+                        schema.LoadedSchemaSchema(
+                            uid=s["details"]["uid"],
+                            core_id=s["details"]["coreId"]
+                        )
+                        for s in input_schema
+                    ],
+                    output_schema=[
+                        schema.LoadedSchemaSchema(
+                            uid=s["details"]["uid"],
+                            core_id=s["details"]["coreId"]
+                        )
+                        for s in output_schema
+                    ],
                     requires=self._parse_loaded_deps(op_node.get("deps", [])),
                 )
             )
