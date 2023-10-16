@@ -1,16 +1,13 @@
-from malevich_space.schema import Stand
+DEV_SPACE_API_URL = "https://dev.api.malevich.ai"
+PROD_SPACE_API_URL = "https://api.malevich.ai"
 
+GRAPHQL_PATH = "/api/v1/graphql"
+AUTH_PATH = "/api/v1/login/access-token"
+API_GATEWAY_PATH = "/e"
 
-STAND = Stand.PROD
+PUBLIC_CLOUD_CONN_URL = "https://core.malevich.ai"
 
-DEV_SPACE_AUTH_URL = "https://api.onjulius.co/api/v1/login/access-token"
-DEV_SPACE_GQL_URL = "https://api.onjulius.co/api/v1/graphql"
-
-PROD_SPACE_AUTH_URL = "https://api.onjulius.co/api/v1/login/access-token"
-PROD_SPACE_GQL_URL = "https://api.onjulius.co/api/v1/graphql"
-
-SPACE_AUTH_URL = PROD_SPACE_AUTH_URL if STAND == Stand.PROD else DEV_SPACE_AUTH_URL
-SPACE_GQL_URL = PROD_SPACE_GQL_URL if STAND == Stand.PROD else DEV_SPACE_GQL_URL
+SPACE_API_URL = DEV_SPACE_API_URL
 
 ACTIVE_SETUP_PATH = "active_space.yaml"
 

@@ -29,13 +29,11 @@ def report(
         space_username: Optional[str] = None,
         space_password: Optional[str] = None,
         space_token: Optional[str] = None,
-        space_auth_url: str = constants.SPACE_AUTH_URL,
-        space_gql_url: str = constants.SPACE_GQL_URL
+        api_url: str = constants.SPACE_API_URL
 ):
     setup = schema.Setup(
         space=schema.SpaceSetup(
-            auth_url=space_auth_url,
-            gql_url=space_gql_url,
+            api_url=api_url,
             username=space_username,
             password=space_password,
             token=space_token
