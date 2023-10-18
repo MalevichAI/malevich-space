@@ -36,19 +36,20 @@ class SpaceOps(BaseService):
 
     def auth(self, username: str, password: str):
         fields = {"username": username, "password": password}
-        response = requests.post(self.space_setup.auth_url, fields)
+        response = requests.post(self.space_setup.auth_url(), fields)
         return response.json()["access_token"]
 
     def init_graphql(self) -> tuple[Client, Client]:
         headers = {"Authorization": "Bearer " + self.token}
 
-        transport = AIOHTTPTransport(url=self.space_setup.gql_url, headers=headers)
+        transport = AIOHTTPTransport(url=self.space_setup.graphql_url(), headers=headers)
 
+        ws_url = self.space_setup.ws_url()
         ws_transport = Client(
-            transport=WebsocketsTransport(url=self.space_setup.ws_url),
+            transport=WebsocketsTransport(url=ws_url),
             fetch_schema_from_transport=True,
             execute_timeout=60
-        ) if self.space_setup.ws_url else None
+        ) if ws_url else None
 
         return Client(
             transport=transport, fetch_schema_from_transport=True, execute_timeout=600
@@ -104,6 +105,10 @@ class SpaceOps(BaseService):
     def create_component(self, *args, **kwargs) -> str:
         result = self.client.execute(client.create_component, variable_values=kwargs)
         return result["components"]["create"]["details"]["uid"]
+
+    def get_flow_by_version_id(self, *args, **kwargs) -> str | None:
+        result = self.client.execute(client.get_flow_by_version_id, variable_values=kwargs)
+        return result["version"]["flow"]["details"]["uid"]
 
     def create_branch(self, *args, **kwargs) -> str:
         result = self.client.execute(client.create_branch, variable_values=kwargs)
@@ -255,6 +260,7 @@ class SpaceOps(BaseService):
 
             out.append(
                 schema.LoadedOpSchema(
+                    uid=op_node["details"]["uid"],
                     core_id=details["coreId"],
                     name=details["name"],
                     doc=details["doc"],
@@ -267,12 +273,23 @@ class SpaceOps(BaseService):
                     collection_out_names=details["collectionOutNames"],
                     type=op_rel["type"],
                     args=[
-                        schema.OpArg(arg_name=arg["argName"], arg_type=arg["argType"])
+                        schema.OpArg(arg_name=arg["argName"], arg_type=arg["argType"], arg_order=arg["argOrder"])
                         for arg in details["args"]
                     ] if details["args"] else None,
-                    input_schema=[s["details"]["coreId"] for s in input_schema],
-                    output_schema=[s["details"]["coreId"] for s in output_schema],
-                    uid=op_node["details"]["uid"],
+                    input_schema=[
+                        schema.LoadedSchemaSchema(
+                            uid=s["details"]["uid"],
+                            core_id=s["details"]["coreId"]
+                        )
+                        for s in input_schema
+                    ],
+                    output_schema=[
+                        schema.LoadedSchemaSchema(
+                            uid=s["details"]["uid"],
+                            core_id=s["details"]["coreId"]
+                        )
+                        for s in output_schema
+                    ],
                     requires=self._parse_loaded_deps(op_node.get("deps", [])),
                 )
             )
@@ -404,7 +421,7 @@ class SpaceOps(BaseService):
     def build_task(self, *args, **kwargs) -> list[str]:
         result = self._org_request(client.build_task, variable_values=kwargs)
         return [
-            created["details"]["uid"] for created in result["flow"]["buildCoreTask"]
+            created["uid"] for created in result["flow"]["buildCoreTask"]
         ]
 
     def boot_task(self, *args, **kwargs) -> str:

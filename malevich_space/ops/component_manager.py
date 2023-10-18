@@ -1,6 +1,8 @@
 import json
 import logging
 
+from typing import Sequence
+
 import pandas as pd
 
 import malevich_space.schema as schema
@@ -46,14 +48,14 @@ class ComponentManager:
         return ".".join(broken)
 
     def _app2version(
-        self, reverse_id: str, app: schema.AppSchema, attach2version_id: str, preload_op: bool = True
+        self, reverse_id: str, app: schema.AppSchema, attach2version_id: str
     ) -> schema.LoadedComponentSchema:
         app_id = self.space.create_app_in_version(
             version_id=attach2version_id,
             container_ref=app.container_ref,
             container_user=app.container_user,
             container_token=app.container_token,
-            preload_op=preload_op
+            preload_op=app.preload_ops
         )
         if app.cfg:
             for cfg in app.cfg:
@@ -92,6 +94,26 @@ class ComponentManager:
             raise ValueError(f"{reverse_id} has not usable component")
         return remote
 
+    def _get_ops(
+            self,
+            av: Sequence[schema.LoadedOpSchema],
+            raw: Sequence[schema.OpSchema]
+    ) -> list[dict[str, list[str]]]:
+        matched = [op for op in av if op.core_id in list(map(lambda x: x.core_id, raw))]
+        by_type = {}
+        for op in matched:
+            if op.type in by_type:
+                by_type[op.type].append(op)
+            else:
+                by_type[op.type] = [op]
+        return [
+            {
+                "opType": op_type,
+                "opId": [op.uid for op in ops]
+            }
+            for op_type, ops in by_type.items()
+        ]
+
     def _flow2version(
         self,
         src_comp_reverse_id: str,
@@ -99,9 +121,9 @@ class ComponentManager:
         attach2version_id: str,
         is_demo: bool = False,
     ) -> schema.LoadedComponentSchema:
-        flow_id = self.space.create_flow_in_version(
-            version_id=attach2version_id, is_demo=is_demo
-        )
+        flow_id = self.space.get_flow_by_version_id(version_id=attach2version_id)
+        if not flow_id:
+            flow_id = self.space.create_flow_in_version(version_id=attach2version_id, is_demo=is_demo)
         loaded_comps = {}
         for comp in flow.components:
             loaded_comp = self.component(
@@ -110,25 +132,22 @@ class ComponentManager:
             )
             loaded_comp_type = loaded_comp.type()
             version_id = loaded_comp.version.uid
+            ops = None
+            if loaded_comp_type == schema.ComponentType.APP:
+                if comp.app and comp.app.active_op:
+                    ops = self._get_ops(loaded_comp.app.ops, comp.app.active_op)
             comp_in_flow_id = self.space.add_comp_in_flow(
                 flow_id=flow_id,
                 target_comp_version_id=version_id,
                 offset_x=comp.offsetX,
                 offset_y=comp.offsetY,
                 version_id=version_id,
+                selected_op=ops
             )
             loaded_comps[comp.alias] = {
                 "component": loaded_comp,
                 "in_flow_id": comp_in_flow_id,
             }
-            if loaded_comp_type == schema.ComponentType.APP:
-                app = loaded_comp.app
-                if comp.app and comp.app.active_op:
-                    active_op_core_id = [op.core_id for op in comp.app.active_op]
-                    active_op = [
-                        op for op in app.ops if op.core_id in active_op_core_id
-                    ]
-                    self.select_op(flow_id, comp_in_flow_id, active_op)
             if comp.active_cfg:
                 if isinstance(comp.active_cfg, str):
                     cfg = comp.active_cfg
@@ -239,6 +258,7 @@ class ComponentManager:
         version_status = self.default_version_status
         version_name = None
         version_update_md = self.default_version_update_md
+        commit_digest = None
         if comp.version:
             if comp.version.readable_name:
                 version_name = comp.version.readable_name
@@ -246,6 +266,7 @@ class ComponentManager:
                 version_update_md = comp.version.updates_markdown
             if comp.version.status:
                 version_status = comp.version.status
+            commit_digest = comp.version.commit_digest
         if loaded:
             if version_mode == schema.VersionMode.DEFAULT:
                 return loaded
@@ -260,6 +281,8 @@ class ComponentManager:
                         if branch.active_version:
                             old_version_name = branch.active_version.readable_name
                     else:
+                        if comp.branch.status:
+                            branch_status = comp.branch.status
                         branch_id = self.space.create_branch(
                             component_id=loaded.uid,
                             name=comp.branch.name,
@@ -305,6 +328,7 @@ class ComponentManager:
             readable_name=version_name,
             updates_markdown=version_update_md,
             branch_version_status=version_status,
+            commit_digest=commit_digest
         )
 
         logging.info(f"New version uid: {new_version_id}")

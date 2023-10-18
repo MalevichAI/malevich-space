@@ -16,3 +16,5 @@ class CIReport(BaseModel):
     commit_message: str
     status: CIStatus
     image: str
+    image_user: str | None
+    image_token: str | None

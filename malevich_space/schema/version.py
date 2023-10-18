@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 class VersionSchema(BaseModel):
     uid: str | None = None
+    commit_digest: str | None = None
     readable_name: str | None = None
     updates_markdown: str | None = None
     status: str | None = None

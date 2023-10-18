@@ -1,14 +1,16 @@
 import malevich_space.schema as schema
 import malevich_space.constants as constants
 
-from malevich_space.ops.service import BaseService
-from malevich_space.ops.component_provider import BaseComponentProvider
+from malevich_space.ops.roller import RollerOps
 from malevich_space.parser import YAMLParser
 
-from .report import CIReportSetup, CIReport, CIPlatform
+from .report import CIReportSetup, CIReport, CIPlatform, CIStatus
 
 
 class CIManager:
+
+    main_branch_name = ["main", "master"]
+    default_space_branch_status = "default"
 
     default_var_name = {
         "comp_dir": "COMPONENT_DIR",
@@ -21,17 +23,8 @@ class CIManager:
 
     PATCH_FLAG = "space ci report"
 
-    def __init__(
-        self,
-        space: BaseService,
-        host: schema.LoadedHostSchema,
-        sa: schema.LoadedSASchema,
-        component_provider: BaseComponentProvider
-    ) -> None:
-        self.space = space
-        self.host = host
-        self.sa = sa
-        self.component_provider = component_provider
+    def __init__(self, roller: RollerOps) -> None:
+        self.roller = roller
 
     @staticmethod
     def flag(name: str, var_name: str | None = None, value: str | None = None) -> str:
@@ -97,24 +90,35 @@ class CIManager:
             case CIPlatform.GITLAB:
                 CIManager._patch_gitlab(setup)
 
-    def _report_ci_reverse_id(self, reverse_id: str, report: CIReport):
-        comp = self.space.get_parsed_component_by_reverse_id(reverse_id=reverse_id)
-        if not comp:
+    def _report_ci_reverse_id(self, local_definition: schema.ComponentSchema, report: CIReport):
+        if report.status != CIStatus.DONE or not local_definition.is_type(schema.ComponentType.APP):
             return
-        branch = self.space.get_branch_by_name(component_id=comp.uid, branch_name=report.branch)
-        if not branch:
-            branch = self.space.create_branch(
-                component_id=comp.uid, name=report.branch, status="created", comp_rel_status="default"
-            )
-        else:
-            branch = branch.uid
-        self.space.create_version(
-            branch_id=branch,
-            readable_name=report.commit_digest,
-            updates_markdown=report.commit_message,
-            branch_version_status=constants.DEFAULT_VERSION_STATUS
+
+        branch_status = constants.DEFAULT_BRANCH_STATUS \
+            if report.branch in self.main_branch_name else self.default_space_branch_status
+
+        local_definition.branch = schema.BranchSchema(
+            name=report.branch,
+            status=branch_status
         )
+        local_definition.version = schema.VersionSchema(
+            commit_digest=report.commit_digest,
+            readable_name=report.commit_digest[:4],
+            updates_markdown=report.commit_message,
+            status=constants.DEFAULT_VERSION_STATUS
+        )
+        if local_definition.app:
+            local_definition.app.container_ref = report.image
+            local_definition.app.container_user = report.image_user
+            local_definition.app.container_token = report.image_token
+        else:
+            local_definition.app = schema.AppSchema(
+                container_ref=report.image,
+                container_user=report.image_user,
+                container_token=report.image_token
+            )
+        self.roller.component(comp=local_definition, version_mode=schema.VersionMode.MINOR)
 
     def report_ci_status(self, report: CIReport):
-        for reverse_id, _ in self.component_provider.get_all():
-            self._report_ci_reverse_id(reverse_id, report)
+        for _, local_definition in self.roller.comp_provider.get_all().items():
+            self._report_ci_reverse_id(local_definition, report)

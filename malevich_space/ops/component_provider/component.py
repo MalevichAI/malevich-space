@@ -24,7 +24,7 @@ class ComponentProvider(BaseComponentProvider):
         return None
 
     def get_all(self) -> dict[str, schema.ComponentSchema]:
-        return dict(ChainMap(*self.providers))
+        return dict(ChainMap(*map(lambda x: x.get_all(), self.providers)))
 
     @staticmethod
     def get_yaml_provider(path: str) -> LocalComponentProvider:
