@@ -121,9 +121,9 @@ class ComponentManager:
         attach2version_id: str,
         is_demo: bool = False,
     ) -> schema.LoadedComponentSchema:
-        flow_id = self.space.create_flow_in_version(
-            version_id=attach2version_id, is_demo=is_demo
-        )
+        flow_id = self.space.get_flow_by_version_id(version_id=attach2version_id)
+        if not flow_id:
+            flow_id = self.space.create_flow_in_version(version_id=attach2version_id, is_demo=is_demo)
         loaded_comps = {}
         for comp in flow.components:
             loaded_comp = self.component(
@@ -134,7 +134,6 @@ class ComponentManager:
             version_id = loaded_comp.version.uid
             ops = None
             if loaded_comp_type == schema.ComponentType.APP:
-                app = loaded_comp.app
                 if comp.app and comp.app.active_op:
                     ops = self._get_ops(loaded_comp.app.ops, comp.app.active_op)
             comp_in_flow_id = self.space.add_comp_in_flow(
@@ -259,6 +258,7 @@ class ComponentManager:
         version_status = self.default_version_status
         version_name = None
         version_update_md = self.default_version_update_md
+        commit_digest = None
         if comp.version:
             if comp.version.readable_name:
                 version_name = comp.version.readable_name
@@ -266,6 +266,7 @@ class ComponentManager:
                 version_update_md = comp.version.updates_markdown
             if comp.version.status:
                 version_status = comp.version.status
+            commit_digest = comp.version.commit_digest
         if loaded:
             if version_mode == schema.VersionMode.DEFAULT:
                 return loaded
@@ -280,6 +281,8 @@ class ComponentManager:
                         if branch.active_version:
                             old_version_name = branch.active_version.readable_name
                     else:
+                        if comp.branch.status:
+                            branch_status = comp.branch.status
                         branch_id = self.space.create_branch(
                             component_id=loaded.uid,
                             name=comp.branch.name,
@@ -325,6 +328,7 @@ class ComponentManager:
             readable_name=version_name,
             updates_markdown=version_update_md,
             branch_version_status=version_status,
+            commit_digest=commit_digest
         )
 
         logging.info(f"New version uid: {new_version_id}")

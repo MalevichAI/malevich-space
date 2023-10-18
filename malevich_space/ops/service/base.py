@@ -39,6 +39,7 @@ class BaseService(ABC):
             readable_name: str,
             branch_version_status: str,
             updates_markdown: str,
+            commit_digest: str | None,
             *args, **kwargs
     ):
         raise NotImplementedError("Method not implemented")
@@ -53,6 +54,10 @@ class BaseService(ABC):
             version_app_status: Optional[str] = None,
             *args, **kwargs
     ):
+        raise NotImplementedError("Method not implemented")
+
+    @abstractmethod
+    def get_flow_by_version_id(self, version_id: str) -> str | None:
         raise NotImplementedError("Method not implemented")
 
     @abstractmethod

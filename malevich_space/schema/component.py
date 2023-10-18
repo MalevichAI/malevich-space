@@ -19,6 +19,8 @@ class AppSchema(BaseModel):
     container_user: str | None = None
     container_token: str | None = None
 
+    preload_ops: bool = True
+
     ops: Sequence[OpSchema] = []
     cfg: Sequence[CfgSchema] = []
 

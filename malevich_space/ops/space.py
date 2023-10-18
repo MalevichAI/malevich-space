@@ -106,6 +106,10 @@ class SpaceOps(BaseService):
         result = self.client.execute(client.create_component, variable_values=kwargs)
         return result["components"]["create"]["details"]["uid"]
 
+    def get_flow_by_version_id(self, *args, **kwargs) -> str | None:
+        result = self.client.execute(client.get_flow_by_version_id, variable_values=kwargs)
+        return result["version"]["flow"]["details"]["uid"]
+
     def create_branch(self, *args, **kwargs) -> str:
         result = self.client.execute(client.create_branch, variable_values=kwargs)
         return result["component"]["createBranch"]["uid"]
@@ -417,7 +421,7 @@ class SpaceOps(BaseService):
     def build_task(self, *args, **kwargs) -> list[str]:
         result = self._org_request(client.build_task, variable_values=kwargs)
         return [
-            created["details"]["uid"] for created in result["flow"]["buildCoreTask"]
+            created["uid"] for created in result["flow"]["buildCoreTask"]
         ]
 
     def boot_task(self, *args, **kwargs) -> str:

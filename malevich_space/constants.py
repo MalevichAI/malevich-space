@@ -5,7 +5,7 @@ GRAPHQL_PATH = "/api/v1/graphql"
 AUTH_PATH = "/api/v1/login/access-token"
 API_GATEWAY_PATH = "/e"
 
-PUBLIC_CLOUD_CONN_URL = "https://core.malevich.ai"
+PUBLIC_CLOUD_CONN_URL = "https://core.malevich.ai/"
 
 SPACE_API_URL = DEV_SPACE_API_URL
 
