@@ -48,14 +48,14 @@ class ComponentManager:
         return ".".join(broken)
 
     def _app2version(
-        self, reverse_id: str, app: schema.AppSchema, attach2version_id: str, preload_op: bool = True
+        self, reverse_id: str, app: schema.AppSchema, attach2version_id: str
     ) -> schema.LoadedComponentSchema:
         app_id = self.space.create_app_in_version(
             version_id=attach2version_id,
             container_ref=app.container_ref,
             container_user=app.container_user,
             container_token=app.container_token,
-            preload_op=preload_op
+            preload_op=app.preload_ops
         )
         if app.cfg:
             for cfg in app.cfg:
