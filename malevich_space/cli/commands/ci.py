@@ -30,6 +30,7 @@ def report(
         image_token: Optional[str] = typer.Option(None),
         space_username: Optional[str] = typer.Option(None),
         space_password: Optional[str] = typer.Option(None),
+        space_org: Optional[str] = typer.Option(None),
         space_token: Optional[str] = typer.Option(None),
         api_url: str = typer.Option(constants.SPACE_API_URL)
 ):
@@ -39,7 +40,8 @@ def report(
             api_url=api_url,
             username=space_username,
             password=space_password,
-            token=space_token
+            token=space_token,
+            org=space_org
         )
     )
 
