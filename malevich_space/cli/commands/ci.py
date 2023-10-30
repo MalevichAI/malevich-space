@@ -26,13 +26,13 @@ def report(
         commit_message: str,
         status: CIStatus,
         image: str,
+        api_url: str,
         image_user: Optional[str] = typer.Option(None),
         image_token: Optional[str] = typer.Option(None),
         space_username: Optional[str] = typer.Option(None),
         space_password: Optional[str] = typer.Option(None),
         space_org: Optional[str] = typer.Option(None),
         space_token: Optional[str] = typer.Option(None),
-        api_url: str = typer.Option(constants.SPACE_API_URL)
 ):
     assert (space_username and space_password) or space_token
     setup = schema.Setup(
