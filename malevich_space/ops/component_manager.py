@@ -1,5 +1,7 @@
+import re
 import json
 import logging
+import uuid
 
 from typing import Sequence
 
@@ -13,6 +15,9 @@ from .component_provider import BaseComponentProvider
 
 
 class ComponentManager:
+
+    numerical_version_pattern = r"^\d+(\.\d+)*$"
+
     default_version_update_md = constants.DEFAULT_VERSION_UPDATE_MD
     default_branch_name = constants.DEFAULT_BRANCH_NAME
     default_branch_status = constants.DEFAULT_BRANCH_STATUS
@@ -31,21 +36,22 @@ class ComponentManager:
         self.comp_dir = comp_dir
         self.component_provider = component_provider
 
-    @staticmethod
-    def increment_version(previous: str | None, mode: str):
+    def increment_version(self, previous: str | None, mode: str):
         if not previous:
             previous = "0.0.0"
-        broken = previous.split(".")
-        if mode == "major":
-            broken[0] = str(int(broken[0]) + 1)
-            broken[1] = str(0)
-            broken[2] = str(0)
-        elif mode == "minor":
-            broken[1] = str(int(broken[1]) + 1)
-            broken[2] = str(0)
-        elif mode == "patch":
-            broken[2] = str(int(broken[2]) + 1)
-        return ".".join(broken)
+        if re.match(self.numerical_version_pattern, previous):
+            broken = previous.split(".")
+            if mode == "major":
+                broken[0] = str(int(broken[0]) + 1)
+                broken[1] = str(0)
+                broken[2] = str(0)
+            elif mode == "minor":
+                broken[1] = str(int(broken[1]) + 1)
+                broken[2] = str(0)
+            elif mode == "patch":
+                broken[2] = str(int(broken[2]) + 1)
+            return ".".join(broken)
+        return str(uuid.uuid4())
 
     def _app2version(
         self, reverse_id: str, app: schema.AppSchema, attach2version_id: str
