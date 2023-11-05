@@ -432,6 +432,21 @@ class SpaceOps(BaseService):
         result = self.client.execute(client.change_task_state, variable_values=kwargs)
         return result["task"]["changeState"]["details"]["uid"]
 
+    def get_ca_in_flow(self, flow_id: str, in_flow_id: str):
+        """Gets CA uid of in-flow component
+
+        Args:
+            flow_id (str): uid of flow
+            in_flow_id (str): uid of collection component within flow
+
+        Returns:
+            uid of CA
+        """
+        result = self.client.execute(client.get_ca_in_flow, variable_values={
+            'flow_id': flow_id,
+            'in_flow_id': in_flow_id
+        })
+        return result['flow']['inFlowComponent']['collectionAlias']['collection']['details']['uid']
     def update_ca(self, *args, **kwargs) -> str:
         result = self.client.execute(client.update_collection_alias, variable_values=kwargs)
         return result["collectionAlias"]["update"]["uid"]

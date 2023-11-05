@@ -46,7 +46,13 @@ class RollerOps:
         )
 
     def _load_host(self, local_host: schema.HostSchema) -> schema.LoadedHostSchema | None:
-        hosts = self.space.get_my_hosts(url=local_host.conn_url)
+        try:
+            # The error is actually within API, but
+            # this fix is easier
+            hosts = self.space.get_my_hosts(url=local_host.conn_url)
+        except:
+            return None
+
         if hosts:
             return hosts[0]
         return None
