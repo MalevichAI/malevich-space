@@ -436,6 +436,21 @@ class SpaceOps(BaseService):
         result = self.client.execute(client.update_collection_alias, variable_values=kwargs)
         return result["collectionAlias"]["update"]["uid"]
 
+    def get_task_start_schema(self, task_id: str) -> list[schema.LoadedTaskStartSchema]:
+        result = self.client.execute(client.get_task_start_schema, variable_values={"task_id": task_id})
+        if "startSchema" not in result["task"]:
+            return []
+        return [
+            schema.LoadedTaskStartSchema(
+                **{
+                    "in_flow_id": start["inFlowId"],
+                    "ca_alias": start["caAlias"],
+                    "injected_alias": start["injectedAlias"]
+                }
+            )
+            for start in result["task"]["startSchema"]
+        ]
+
     def run_task(self, *args, **kwargs) -> str:
         result = self._org_request(client.run_task, variable_values=kwargs)
         return result["runWithStatus"]["details"]["uid"]
