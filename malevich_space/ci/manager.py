@@ -94,6 +94,13 @@ class CIManager:
         if report.status != CIStatus.DONE or not local_definition.is_type(schema.ComponentType.APP):
             return
 
+        if not self.roller.space.get_parsed_component_by_reverse_id(
+            local_definition.reverse_id
+        ):
+            self.roller.component(
+                local_definition
+            )
+
         branch_status = constants.DEFAULT_BRANCH_STATUS \
             if report.branch in self.main_branch_name else self.default_space_branch_status
 
