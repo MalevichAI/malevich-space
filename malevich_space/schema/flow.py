@@ -11,12 +11,18 @@ class SchemaAlias(BaseModel):
     target: str
 
 
+class Terminal(BaseModel):
+    src: str
+    target: str
+
+
 class InFlowDependency(BaseModel):
     as_collection: str | None = None
     alias: str | None = None
     reverse_id: str | None = None
     from_op_id: str | None = None
     to_op_id: str | None = None
+    terminals: list[Terminal] | None = None
     schema_aliases: list[SchemaAlias] | None = None
 
 

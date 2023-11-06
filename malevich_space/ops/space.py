@@ -175,9 +175,11 @@ class SpaceOps(BaseService):
             "uid"
         ]
 
-    def link(self, *args, **kwargs) -> str:
+    def link(self, *args, **kwargs) -> str | None:
         result = self.client.execute(client.link_components, variable_values=kwargs)
-        return result["flow"]["linkComponents"]["schemaAdapter"]["details"]["uid"]
+        if result["flow"]["linkComponents"]["schemaAdapter"] is not None:
+            return result["flow"]["linkComponents"]["schemaAdapter"]["details"]["uid"]
+        return None
 
     def add_schema_alias(self, *args, **kwargs) -> str:
         result = self.client.execute(client.add_schema_alias, variable_values=kwargs)

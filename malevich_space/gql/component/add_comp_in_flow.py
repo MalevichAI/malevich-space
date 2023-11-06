@@ -10,12 +10,14 @@ add_comp_to_flow = gql(
         $comp_flow_comp_status: String,
         $offset_x: Float,
         $offset_y: Float,
+        $alias: String,
         $version_id: String,
         $selected_op: [InFlowSelectedOp!]) {
       flow(uid: $flow_id) {
         addComponent(
           input: {
             node: {
+              alias: $alias,
               offsetX: $offset_x,
               offsetY: $offset_y
             },
