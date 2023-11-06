@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "malevich-space"
-version = "0.2.3"
+version = "0.2.6"
 description = "SDK for Malevich Space"
-authors = ["Zak Davydov <zak@onjulius.co>"]
+authors = ["Zak Davydov <zak@malevich.ai>"]
 license = "Apache 2"
 homepage = "https://github.com/MalevichAI/space"
 repository = "https://github.com/MalevichAI/space"
