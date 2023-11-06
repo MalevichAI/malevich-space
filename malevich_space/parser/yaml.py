@@ -150,14 +150,19 @@ class YAMLParser(AbsParser):
         if "depends" in component_data:
             for alias, dep in component_data["depends"].items():
                 schema_aliases = None
+                terminals = None
                 if dep and "schema_aliases" in dep and dep["schema_aliases"]:
                     schema_aliases = [
                         SchemaAlias(src=key, target=value)
                         for key, value in dep["schema_aliases"].items()
                     ]
+                    defined_terminals = dep.get("terminals")
+                    if defined_terminals:
+                        terminals = [Terminal(**terminal) for terminal in defined_terminals]
                 component_data["depends"][alias] = InFlowDependency(
                     alias=alias,
                     schema_aliases=schema_aliases,
+                    terminals=terminals,
                     as_collection=dep.get("as_collection") if dep else None,
                 )
         try:

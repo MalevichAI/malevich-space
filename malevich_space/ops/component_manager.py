@@ -143,6 +143,7 @@ class ComponentManager:
                 if comp.app and comp.app.active_op:
                     ops = self._get_ops(loaded_comp.app.ops, comp.app.active_op)
             comp_in_flow_id = self.space.add_comp_in_flow(
+                alias=comp.alias,
                 flow_id=flow_id,
                 target_comp_version_id=version_id,
                 offset_x=comp.offsetX,
@@ -180,13 +181,25 @@ class ComponentManager:
 
                 assert start_id and target_id
 
-                self.space.link(
-                    flow_id=flow_id,
-                    start_id=start_id,
-                    target_id=target_id,
-                    schema_adapter_id=None,
-                    as_collection=dep.as_collection,
-                )
+                if dep.terminals:
+                    for terminal in dep.terminals:
+                        self.space.link(
+                            flow_id=flow_id,
+                            start_id=start_id,
+                            target_id=target_id,
+                            schema_adapter_id=None,
+                            as_collection=dep.as_collection,
+                            start_terminal_id=terminal.src,
+                            target_terminal_id=terminal.target
+                        )
+                else:
+                    self.space.link(
+                        flow_id=flow_id,
+                        start_id=start_id,
+                        target_id=target_id,
+                        schema_adapter_id=None,
+                        as_collection=dep.as_collection
+                    )
 
                 if not dep.schema_aliases:
                     continue

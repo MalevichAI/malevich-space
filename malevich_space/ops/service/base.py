@@ -104,7 +104,7 @@ class BaseService(ABC):
         raise NotImplementedError("Method not implemented")
 
     @abstractmethod
-    def link(self, *args, **kwargs):
+    def link(self, *args, **kwargs) -> str | None:
         raise NotImplementedError("Method not implemented")
 
     @abstractmethod
