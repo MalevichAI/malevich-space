@@ -16,7 +16,7 @@ class SpaceSetup(BaseModel):
     org: str | None = None
 
     host: HostSchema = HostSchema(conn_url=constants.PUBLIC_CLOUD_CONN_URL)
-    
+
     graphql_path: str = constants.GRAPHQL_PATH
     auth_path: str = constants.AUTH_PATH
     api_gateway_path: str = constants.API_GATEWAY_PATH
