@@ -23,7 +23,7 @@ class RollerOps:
         path: str | None = None,
         comp_provider: ComponentProvider | None = None
     ) -> None:
-        logging.getLogger("gql.transport.aiohttp").setLevel(logging.ERROR)
+        logging.getLogger("gql.transport.requests").setLevel(logging.ERROR)
 
         self.config = config
 
