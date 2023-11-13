@@ -4,6 +4,7 @@ import logging
 from typing import Optional
 
 import typer
+import pandas as pd
 
 import malevich_space.schema as schema
 
@@ -64,6 +65,33 @@ def run(
             payload = json.load(f)
     task = schema.LoadedTaskSchema(uid=task_id)
     roller.run_task(task=task, raw=payload)
+
+
+@app.command(context_settings={"allow_extra_args": True, "ignore_unknown_options": True})
+def invoke(
+    component: str,
+    ctx: typer.Context,
+    branch: Optional[str] = typer.Option(None, help="Invoke specific branch"),
+    webhook: Optional[str] = typer.Option(None, help="Webhook to send the results to"),
+    setup: Optional[str] = typer.Option(None, help=SETUP_HELP)
+):
+    banned = ["setup", "webhook", "branch"]
+    override = []
+    for arg in ctx.args:
+        splitted = arg.split("=")
+        if len(splitted) != 2:
+            continue
+        name, value = splitted
+        if name in banned:
+            continue
+        override.append(schema.Payload(alias=name, docs=[json.dumps(record) for record in pd.read_csv(value).to_dict("records")]))
+    roller = local_roller(setup, None)
+    task_id, run_id = roller.space.invoke(
+        component=component,
+        payload=schema.InvokePayload(payload=override, webhook=[webhook] if webhook else None),
+        branch=branch
+    )
+    typer.echo(f"Invoked {component}. Task ID: {task_id} | Run ID: {run_id}")
 
 
 @app.command()
