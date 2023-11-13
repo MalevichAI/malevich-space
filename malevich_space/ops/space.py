@@ -3,7 +3,7 @@ from typing import Any, Optional, Union
 import requests
 
 from gql import Client
-from gql.transport.aiohttp import AIOHTTPTransport
+from gql.transport.requests import RequestsHTTPTransport
 from gql.transport.websockets import WebsocketsTransport
 from graphql import DocumentNode, ExecutionResult
 
@@ -42,7 +42,7 @@ class SpaceOps(BaseService):
     def init_graphql(self) -> tuple[Client, Client]:
         headers = {"Authorization": "Bearer " + self.token}
 
-        transport = AIOHTTPTransport(url=self.space_setup.graphql_url(), headers=headers)
+        transport = RequestsHTTPTransport(url=self.space_setup.graphql_url(), headers=headers)
 
         ws_url = self.space_setup.ws_url()
         ws_transport = Client(
