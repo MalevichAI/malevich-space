@@ -449,6 +449,7 @@ class SpaceOps(BaseService):
             'in_flow_id': in_flow_id
         })
         return result['flow']['inFlowComponent']['collectionAlias']['collection']['details']['uid']
+    
     def update_ca(self, *args, **kwargs) -> str:
         result = self.client.execute(client.update_collection_alias, variable_values=kwargs)
         return result["collectionAlias"]["update"]["uid"]
@@ -498,3 +499,18 @@ class SpaceOps(BaseService):
             kwargs["api_key"] = [token_id]
         result = self.client.execute(client.create_task_endpoint, variable_values=kwargs)
         return result["task"]["createEndpoint"]["details"]["uid"]
+    
+    def invoke(self, component: str, payload: schema.InvokePayload, branch: str | None = None) -> tuple[str, str] | None:
+        kwargs = {
+            "component": component,
+            "branch": branch,
+            "payload": [p.model_dump() for p in payload.payload],
+            "webhook": payload.webhook
+        }
+        result = self.client.execute(client.invoke_component, variable_values=kwargs)
+        if result["invoke"] is None:
+            return None
+        task = result["invoke"]["task"]
+        run = result["invoke"]["run"]
+        return task["details"]["uid"], run["details"]["uid"]
+    
