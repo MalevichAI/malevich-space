@@ -69,7 +69,10 @@ class ComponentSchema(BaseModel):
     flow: FlowSchema | None = None
     collection: CollectionAliasSchema | None = None
 
+    icon: str | None = None
     hf_url: str | None = None
+    repo_url: str | None = None
+    docs_url: str | None = None
 
     branch: BranchSchema | None = None
     version: VersionSchema | None = None

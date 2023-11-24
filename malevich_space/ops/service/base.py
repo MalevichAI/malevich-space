@@ -13,6 +13,10 @@ class BaseService(ABC):
     @abstractmethod
     def get_my_hosts(self, url: Optional[str] = None, sa_core_id: Optional[str] = None, *args, **kwargs):
         raise NotImplementedError("Method not implemented")
+    
+    @abstractmethod
+    def create_org(self, name: str, reverse_id: str) -> str:
+        raise NotImplementedError
 
     @abstractmethod
     def create_component(

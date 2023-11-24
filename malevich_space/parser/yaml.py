@@ -164,6 +164,7 @@ class YAMLParser(AbsParser):
                     schema_aliases=schema_aliases,
                     terminals=terminals,
                     as_collection=dep.get("as_collection") if dep else None,
+                    order=dep.get("order") if dep else None
                 )
         try:
             return InFlowComponentSchema(**component_data)

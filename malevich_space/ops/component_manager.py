@@ -190,7 +190,8 @@ class ComponentManager:
                             schema_adapter_id=None,
                             as_collection=dep.as_collection,
                             start_terminal_id=terminal.src,
-                            target_terminal_id=terminal.target
+                            target_terminal_id=terminal.target,
+                            order=dep.order
                         )
                 else:
                     self.space.link(
@@ -198,7 +199,8 @@ class ComponentManager:
                         start_id=start_id,
                         target_id=target_id,
                         schema_adapter_id=None,
-                        as_collection=dep.as_collection
+                        as_collection=dep.as_collection,
+                        order=dep.order
                     )
 
                 if not dep.schema_aliases:
