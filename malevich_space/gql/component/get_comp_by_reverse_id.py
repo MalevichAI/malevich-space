@@ -40,6 +40,7 @@ get_comp_with_reverse_id = gql(
                 node {
                   details {
                     uid
+                    alias
                   }
                   component {
                     details {

@@ -1,5 +1,6 @@
 from typing import Any, Optional, Union
 
+import json
 import requests
 
 from gql import Client
@@ -487,6 +488,30 @@ class SpaceOps(BaseService):
         if "details" in by_name:
             return by_name["details"]
         return None
+
+    def get_results(self, run_id: str, in_flow_id: str) -> list[schema.ResultSchema]:
+        result = self.client.execute(
+            client.get_in_flow_results,
+            variable_values={"run_id": run_id, "in_flow_id": in_flow_id}
+        )
+        outputs = []
+        for result in result['run']['interCa']['edges']:
+            ca_details = result['node']['ca']['details']
+            schema_details = result['node']['ca']['schema']
+            ca = schema.LoadedCollectionAliasSchema(
+                uid=ca_details['uid'],
+                core_alias=ca_details['coreAlias'],
+                core_id=ca_details['coreId'],
+                schema_core_id=None if not schema_details else schema_details['details']['coreId']
+            )
+            docs = [json.loads(x['node']['rawJson']) for x in result['node']['ca']['coreTable']['edges']]
+
+            outputs.append(schema.ResultSchema(
+                ca=ca,
+                raw_json=docs
+            ))
+
+        return outputs
 
     def create_endpoint(self, task_id: str, alias: str | None, token: str | None) -> str:
         kwargs = {
