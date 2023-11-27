@@ -21,3 +21,4 @@ from .version_mode import *
 from .stand import *
 
 from .payload import *
+from .result import *
