@@ -34,6 +34,16 @@ class SpaceOps(BaseService):
         if variable_values and self.org:
             variable_values["org_id"] = self.org.uid
         return self.client.execute(request, variable_values=variable_values)
+    
+    def create_org(self, name: str, reverse_id: str) -> str:
+        result = self.client.execute(client.create_org, variable_values={"name": name, "reverse_id": reverse_id})
+        if "details" in result["orgs"]["create"]:
+            return result["orgs"]["create"]["details"]["uid"]
+        return None
+    
+    def invite_to_org(self, reverse_id: str, members: str) -> list[str]:
+        result = self.client.execute(client.invite_to_org, variable_values={"reverse_id": reverse_id, "members": members})
+        return [r["detail"] for r in result["org"]["addUserByEmail"]]
 
     def auth(self, username: str, password: str):
         fields = {"username": username, "password": password}
@@ -313,6 +323,7 @@ class SpaceOps(BaseService):
     ) -> schema.LoadedInFlowComponentSchema:
         base_data = {
             "uid": in_flow_data["node"]["details"]["uid"],
+            "alias": in_flow_data["node"]["details"]["alias"],
             "app": self._parse_in_flow_app(in_flow_data["node"]["app"])
             if "app" in in_flow_data["node"]
             else None,

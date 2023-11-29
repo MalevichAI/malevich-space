@@ -14,6 +14,7 @@ link_components = gql(
         $as_collection: String,
         $start_terminal_id: String,
         $target_terminal_id: String
+        $order: Int
     ) {
       flow(uid: $flow_id) {
         linkComponents(
@@ -25,7 +26,8 @@ link_components = gql(
             rel: {
               asCollection: $as_collection
               schemaAdapterId: $schema_adapter_id,
-              status: $status
+              status: $status,
+              order: $order
             },
             startTerminalId: $start_terminal_id,
             targetTerminalId: $target_terminal_id

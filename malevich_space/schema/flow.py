@@ -24,6 +24,7 @@ class InFlowDependency(BaseModel):
     to_op_id: str | None = None
     terminals: list[Terminal] | None = None
     schema_aliases: list[SchemaAlias] | None = None
+    order: int | None = None
 
 
 class InFlowAppSchema(BaseModel):

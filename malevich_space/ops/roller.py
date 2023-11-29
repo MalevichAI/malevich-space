@@ -23,7 +23,7 @@ class RollerOps:
         path: str | None = None,
         comp_provider: ComponentProvider | None = None
     ) -> None:
-        logging.getLogger("gql.transport.aiohttp").setLevel(logging.ERROR)
+        logging.getLogger("gql.transport.requests").setLevel(logging.ERROR)
 
         self.config = config
 
@@ -114,6 +114,18 @@ class RollerOps:
         with open(path, "r") as f:
             data = f.read()
             return self.space.create_scheme(core_id=name, name=name, raw=data)
+        
+    def create_org(self, name: str, reverse_id: str | None, members: list[str]) -> tuple[str | None, list[str] | None]:
+        if not reverse_id:
+            reverse_id = name
+        org_id = self.space.create_org(name=name, reverse_id=reverse_id)
+        if not org_id:
+            return None, None
+        status = self.space.invite_to_org(reverse_id=reverse_id, members=members)
+        return org_id, status
+    
+    def invite_to_org(self, reverse_id: str, members: list[str]) -> list[str]:
+        return self.space.invite_to_org(reverse_id=reverse_id, members=members)
 
 
 def local_roller(setup: str | None, comp_dir: str | str = None) -> RollerOps:
