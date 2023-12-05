@@ -8,3 +8,4 @@ from .run import *
 
 from .start_schema import *
 from .get_results import *
+from .run_shaphost_components import *
