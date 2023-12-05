@@ -406,6 +406,17 @@ class SpaceOps(BaseService):
             ]
         )
 
+    def get_snapshot_components(self, run_id: str) -> dict[str, str]:
+        results = self.client.execute(client.get_run_snapshot_components, variable_values={
+            'run_id': run_id
+        })
+
+        components = results['run']['task']['snapshot']['inFlowComponents']['edges']
+        return {
+            c['node']['details']['alias']: c['node']['details']['uid']
+            for c in components
+        }
+
     def malevich(self, prompt: str, max_depth: int = 1) -> tuple[str, str]:
         res = self.client.execute(
             client.add_pt_2_malevich,
