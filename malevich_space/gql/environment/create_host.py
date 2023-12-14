@@ -3,7 +3,7 @@ from gql import gql
 
 host_create = gql(
     """
-    mutation CreateHost($alias: String!, $conn_url: String!) {
+    mutation CreateHost($alias: String, $conn_url: String!) {
       hosts {
         create(input: {
           node: {

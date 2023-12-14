@@ -76,6 +76,31 @@ class SpaceOps(BaseService):
                 # slug=org["reverseId"],
             )
         return None
+    
+    def add_secret(self, key: str, value: str, org_id: str | None = None, env_name: str = "default") -> str | None:
+        result = None
+        if org_id:
+            raise NotImplementedError
+        else:
+            result = self.client.execute(client.add_user_env_secret, variable_values={
+                "env_name": env_name,
+                "key": key,
+                "value": value
+            })
+            return result["user"]["me"]["env"]["addSecret"]["details"]["uid"]
+        return None
+    
+    def get_secret(self, key: str, org_id: str | None = None, env_name: str = "default") -> str:
+        result = None
+        if org_id:
+            raise NotImplementedError
+        else:
+            result = self.client.execute(client.get_user_env_secret, variable_values={
+                "env_name": env_name,
+                "key": key
+            })
+            return result["user"]["me"]["env"]["key"]["details"]["value"]
+        return None
 
     def _parse_raw_sa(self, raw: dict[str, Any]) -> schema.LoadedSASchema:
         return schema.LoadedSASchema(

@@ -5,3 +5,6 @@ from .org import *
 
 from .org_create import *
 from .invite_org import *
+
+from .add_user_secret import *
+from .get_user_secret import *
