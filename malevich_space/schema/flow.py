@@ -71,6 +71,8 @@ class LoadedInFlowComponentSchema(InFlowComponentSchema):
     flow: LoadedInFlowFlowSchema | None = None
     collection: LoadedInFlowCollectionSchema | None = None
     prev: list["LoadedInFlowComponentSchema"] = []
+    alias: str | None = None
+
 
 
 class FlowSchema(BaseModel):

@@ -142,6 +142,7 @@ class ComponentManager:
             if loaded_comp_type == schema.ComponentType.APP:
                 if comp.app and comp.app.active_op:
                     ops = self._get_ops(loaded_comp.app.ops, comp.app.active_op)
+            print(comp.alias)
             comp_in_flow_id = self.space.add_comp_in_flow(
                 alias=comp.alias,
                 flow_id=flow_id,

@@ -95,11 +95,11 @@ class CIManager:
             return
 
         if not self.roller.space.get_parsed_component_by_reverse_id(
-            local_definition.reverse_id
+            reverse_id=local_definition.reverse_id
         ):
-            self.roller.component(
-                local_definition
-            )
+            vmode = schema.VersionMode.DEFAULT
+        else:
+            vmode = schema.VersionMode.MINOR
 
         branch_status = constants.DEFAULT_BRANCH_STATUS \
             if report.branch in self.main_branch_name else self.default_space_branch_status
@@ -124,7 +124,11 @@ class CIManager:
                 container_user=report.image_user,
                 container_token=report.image_token
             )
-        self.roller.component(comp=local_definition, version_mode=schema.VersionMode.MINOR)
+
+        self.roller.component(
+            comp=local_definition,
+            version_mode=vmode
+        )
 
     def report_ci_status(self, report: CIReport):
         for _, local_definition in self.roller.comp_provider.get_all().items():
