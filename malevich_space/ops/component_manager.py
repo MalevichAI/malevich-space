@@ -329,6 +329,9 @@ class ComponentManager:
             if comp.not_designed_for_use_case:
                 for uc in comp.not_designed_for_use_case:
                     self._attach_use_case(comp_uid=comp_id, uc=uc, designed=False)
+            if comp.tags:
+                created = [self.space.create_tag(title=tag) for tag in comp.tags]
+                self.space.attach_tag_to_comp(comp_id=comp_id, tag_ids=created)
             branch_name = self.default_branch_name
             if comp.branch:
                 if comp.branch.name:
