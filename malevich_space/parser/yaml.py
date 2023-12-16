@@ -124,7 +124,8 @@ class YAMLParser(AbsParser):
         try:
             return ComponentSchema(**comp_data)
         except Exception as e:
-            logging.exception(e)
+            # logging.exception(e)
+            pass
         return None
 
     def _parse_in_flow_component(
@@ -187,9 +188,12 @@ class YAMLParser(AbsParser):
     def parse_dir_iterator(self, path: str, parser_fun) -> dict[str, Any]:
         out = {}
         for file in glob.glob(f"{path}/**/*.yaml", recursive=True):
-            parsed = parser_fun(file, path)
-            for p in parsed:
-                out[p.reverse_id] = p
+            try:
+                parsed = parser_fun(file, path)
+                for p in parsed:
+                    out[p.reverse_id] = p
+            except Exception as e:
+                continue
         return out
 
     @staticmethod
