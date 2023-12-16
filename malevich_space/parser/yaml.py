@@ -124,7 +124,8 @@ class YAMLParser(AbsParser):
         try:
             return ComponentSchema(**comp_data)
         except Exception as e:
-            logging.exception(e)
+            # logging.exception(e)
+            pass
         return None
 
     def _parse_in_flow_component(
