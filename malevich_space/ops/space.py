@@ -141,6 +141,10 @@ class SpaceOps(BaseService):
     def create_component(self, *args, **kwargs) -> str:
         result = self.client.execute(client.create_component, variable_values=kwargs)
         return result["components"]["create"]["details"]["uid"]
+    
+    def update_component(self, *args, **kwargs) -> str:
+        result = self.client.execute(client.update_component, variable_values=kwargs)
+        return result["component"]["update"]["uid"]
 
     def get_flow_by_version_id(self, *args, **kwargs) -> str | None:
         result = self.client.execute(client.get_flow_by_version_id, variable_values=kwargs)

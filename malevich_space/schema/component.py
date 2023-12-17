@@ -65,6 +65,8 @@ class ComponentSchema(BaseModel):
     designed_for_use_case: list[UseCaseSchema] = []
     not_designed_for_use_case: list[UseCaseSchema] = []
 
+    tags: list[str] | None = None
+
     app: AppSchema | None = None
     flow: FlowSchema | None = None
     collection: CollectionAliasSchema | None = None

@@ -193,7 +193,7 @@ class YAMLParser(AbsParser):
                 for p in parsed:
                     out[p.reverse_id] = p
             except Exception as e:
-                continue
+                logging.warning(f"{file} is not a valid space .yaml")
         return out
 
     @staticmethod

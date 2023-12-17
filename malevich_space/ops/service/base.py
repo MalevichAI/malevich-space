@@ -17,6 +17,18 @@ class BaseService(ABC):
     @abstractmethod
     def create_org(self, name: str, reverse_id: str) -> str:
         raise NotImplementedError
+    
+    @abstractmethod
+    def create_tag(self, title: str) -> str:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def attach_tag_to_comp(self, comp_id: str, tag_ids: list[str]):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def update_component(self, *args, **kwargs) -> str:
+        raise NotImplementedError
 
     @abstractmethod
     def create_component(
