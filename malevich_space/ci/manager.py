@@ -91,28 +91,18 @@ class CIManager:
                 CIManager._patch_gitlab(setup)
 
     def _report_ci_reverse_id(self, local_definition: schema.ComponentSchema, report: CIReport):
+        
         if report.status != CIStatus.DONE or not local_definition.is_type(schema.ComponentType.APP):
             return
 
-        if not self.roller.space.get_parsed_component_by_reverse_id(
-            reverse_id=local_definition.reverse_id
-        ):
-            vmode = schema.VersionMode.DEFAULT
-        else:
-            vmode = schema.VersionMode.MINOR
+        vmode = schema.VersionMode.MINOR
 
-        branch_status = constants.DEFAULT_BRANCH_STATUS \
-            if report.branch in self.main_branch_name else self.default_space_branch_status
-
-        local_definition.branch = schema.BranchSchema(
-            name=report.branch,
-            status=branch_status
-        )
+        local_definition.branch = schema.BranchSchema(name=report.branch)
+        
         local_definition.version = schema.VersionSchema(
             commit_digest=report.commit_digest,
             readable_name=report.commit_digest[:4],
-            updates_markdown=report.commit_message,
-            status=constants.DEFAULT_VERSION_STATUS
+            updates_markdown=report.commit_message
         )
         if local_definition.app:
             local_definition.app.container_ref = report.image

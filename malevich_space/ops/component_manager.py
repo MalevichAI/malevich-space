@@ -268,6 +268,21 @@ class ComponentManager:
         use_case = self.space.create_use_case(title=uc.title, body=uc.body, is_public_example=uc.is_public_example)
         self.space.attach_use_case(comp_uid=comp_uid, use_case_uid=[use_case], designed=designed)
 
+    def attach_metadata(self, comp_id: str, comp: schema.ComponentSchema):
+        if comp.designed_for_use_case:
+            for uc in comp.designed_for_use_case:
+                self._attach_use_case(comp_uid=comp_id, uc=uc, designed=True)
+        if comp.not_designed_for_use_case:
+            for uc in comp.not_designed_for_use_case:
+                self._attach_use_case(comp_uid=comp_id, uc=uc, designed=False)
+        if comp.tags:
+            created = [self.space.create_tag(title=tag) for tag in comp.tags]
+            self.space.attach_tag_to_comp(comp_id=comp_id, tag_ids=created)
+
+    def update_component(self, loaded: schema.LoadedComponentSchema, update_comp: schema.ComponentSchema):
+        self.space.update_component(comp_id=loaded.uid, **update_comp.model_dump())
+        self.attach_metadata(comp_id=loaded.uid, comp=update_comp)
+
     def component(
         self, comp: schema.ComponentSchema, version_mode: schema.VersionMode
     ) -> schema.LoadedComponentSchema:
@@ -290,6 +305,7 @@ class ComponentManager:
                 version_status = comp.version.status
             commit_digest = comp.version.commit_digest
         if loaded:
+            self.update_component(loaded=loaded, update_comp=comp)
             if version_mode == schema.VersionMode.DEFAULT:
                 return loaded
             else:
@@ -324,15 +340,7 @@ class ComponentManager:
             kwargs["type"] = comp.type().value
             kwargs["org_id"] = self.space.org_id()
             comp_id = self.space.create_component(**kwargs)
-            if comp.designed_for_use_case:
-                for uc in comp.designed_for_use_case:
-                    self._attach_use_case(comp_uid=comp_id, uc=uc, designed=True)
-            if comp.not_designed_for_use_case:
-                for uc in comp.not_designed_for_use_case:
-                    self._attach_use_case(comp_uid=comp_id, uc=uc, designed=False)
-            if comp.tags:
-                created = [self.space.create_tag(title=tag) for tag in comp.tags]
-                self.space.attach_tag_to_comp(comp_id=comp_id, tag_ids=created)
+            self.attach_metadata(comp_id=comp_id, comp=comp)
             branch_name = self.default_branch_name
             if comp.branch:
                 if comp.branch.name:
