@@ -590,3 +590,13 @@ class SpaceOps(BaseService):
         run = result["invoke"]["run"]
         return task["details"]["uid"], run["details"]["uid"]
     
+    def add_comp_to_org(self, *, comp_id: str, org_id: str) -> str | None:
+        kwargs = {
+            "comp_id": comp_id,
+            "org_id": org_id
+        }
+        result = self.client.execute(client.comp_to_org, variable_values=kwargs)
+        if "details" not in result["component"]["addToOrg"]:
+            return None
+        return result["component"]["addToOrg"]["details"]["uid"]
+    

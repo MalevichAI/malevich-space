@@ -29,6 +29,10 @@ class BaseService(ABC):
     @abstractmethod
     def update_component(self, *args, **kwargs) -> str:
         raise NotImplementedError
+    
+    @abstractmethod
+    def add_comp_to_org(self, *, comp_id: str, org_id: str) -> str | None:
+        raise NotImplementedError
 
     @abstractmethod
     def create_component(
