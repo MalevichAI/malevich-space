@@ -306,6 +306,8 @@ class ComponentManager:
             commit_digest = comp.version.commit_digest
         if loaded:
             self.update_component(loaded=loaded, update_comp=comp)
+            if org_id := self.space.org_id():
+                self.space.add_comp_to_org(comp_id=loaded.uid, org_id=org_id)
             if version_mode == schema.VersionMode.DEFAULT:
                 return loaded
             else:

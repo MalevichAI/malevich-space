@@ -31,6 +31,10 @@ class BaseService(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def add_comp_to_org(self, *, comp_id: str, org_id: str) -> str | None:
+        raise NotImplementedError
+
+    @abstractmethod
     def create_component(
             self,
             name: str,

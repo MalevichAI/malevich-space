@@ -24,3 +24,5 @@ from .flow_by_version_id import *
 from .invoke import *
 
 from .update import *
+
+from .add_comp_to_org import *
