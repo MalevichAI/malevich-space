@@ -6,7 +6,7 @@ update_component = gql(
     mutation UpdateComponent(
         $comp_id: String!,
         $name: String!,
-        $description: String!,
+        $description: String,
         $hf_url: String,
         $icon: String,
         $repo_url: String,
