@@ -570,7 +570,7 @@ class SpaceOps(BaseService):
 
         return outputs
 
-    def create_endpoint(self, task_id: str, alias: str | None, token: str | None) -> str:
+    def create_endpoint(self, task_id: str, alias: str | None, token: str | None) -> tuple[str, str]:
         kwargs = {
             "task_id": task_id,
             "alias": alias,
@@ -580,7 +580,9 @@ class SpaceOps(BaseService):
             token_id = self.get_api_token_by_name(name=token)
             kwargs["api_key"] = [token_id]
         result = self.client.execute(client.create_task_endpoint, variable_values=kwargs)
-        return result["task"]["createEndpoint"]["details"]["uid"]
+        endpoint_uid = result["task"]["createEndpoint"]["details"]["uid"]
+        core_url = result["task"]["createEndpoint"]["invokationUrl"]
+        return endpoint_uid, core_url
     
     def invoke(self, component: str, payload: schema.InvokePayload, branch: str | None = None) -> tuple[str, str] | None:
         kwargs = {

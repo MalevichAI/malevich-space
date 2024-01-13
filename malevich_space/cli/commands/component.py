@@ -129,8 +129,8 @@ def endpoint(
         setup: Optional[str] = typer.Option(None, help=SETUP_HELP),
 ):
     roller = local_roller(setup, None)
-    created = roller.space.create_endpoint(task_id=task_id, alias=alias, token=token)
-    logging.info(f">> Endpoint created - {roller.config.space.api_gateway_url()}/{alias if alias else created}")
+    uid, url = roller.space.create_endpoint(task_id=task_id, alias=alias, token=token)
+    logging.info(f">> Endpoint created - {url}")
 
 
 @app.command()

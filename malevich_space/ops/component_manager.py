@@ -192,7 +192,7 @@ class ComponentManager:
                             as_collection=dep.as_collection,
                             start_terminal_id=terminal.src,
                             target_terminal_id=terminal.target,
-                            order=dep.order
+                            order=terminal.order
                         )
                 else:
                     self.space.link(
