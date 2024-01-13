@@ -73,7 +73,7 @@ class RollerOps:
         logging.info(f"|- Version: {loaded.version}")
         return loaded
 
-    def build(self, comp: schema.LoadedComponentSchema) -> list[str] | None:
+    def build(self, comp: schema.LoadedComponentSchema, ms_build: bool = True) -> list[str] | None:
         """
         Build component active version :param comp: component to build :return task_id:
 
@@ -81,7 +81,10 @@ class RollerOps:
         """
         if not comp.flow:
             return None
-        task_id = self.space.build_task(flow_id=comp.flow.uid, host_id=self.host.uid)
+        if ms_build:
+            task_id = self.space.build_task_v2(flow_id=comp.flow.uid, host_id=self.host.uid)
+        else:
+            task_id = self.space.build_task(flow_id=comp.flow.uid, host_id=self.host.uid)
         logging.info(f"Built {comp.reverse_id} with task_id (s): {task_id}")
         return task_id
 

@@ -477,6 +477,12 @@ class SpaceOps(BaseService):
         return [
             created["uid"] for created in result["flow"]["buildCoreTask"]
         ]
+    
+    def build_task_v2(self, *args, **kwargs) -> str | None:
+        result = self._org_request(client.build_task_v2, variable_values=kwargs)
+        if "uid" in result["flow"]["buildV2"]:
+            return result["flow"]["buildV2"]
+        return None
 
     def boot_task(self, *args, **kwargs) -> str:
         result = self.client.execute(client.boot_task, variable_values=kwargs)
