@@ -13,6 +13,7 @@ get_flow = gql(
             node {
               details {
                 uid
+                alias
               }
               prompt {
                 details {

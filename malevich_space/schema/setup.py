@@ -45,7 +45,7 @@ class SpaceSetup(BaseModel):
         return f"{self.api_url}{self.auth_path}"
 
     def ws_url(self) -> str:
-        return f"{self._replace_url_scheme(self.api_url, 'ws')}{self.graphql_path}"
+        return f"{self._replace_url_scheme(self.api_url, 'wss')}{self.graphql_path}"
     
     def api_gateway_url(self) -> str:
         return f"{self.api_url}{self.api_gateway_path}"

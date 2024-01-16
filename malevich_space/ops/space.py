@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union
+from typing import Any, Iterable, Optional, Union
 
 import json
 import requests
@@ -435,16 +435,53 @@ class SpaceOps(BaseService):
             ]
         )
 
+    def subscribe_to_status(self, run_id: str) -> Iterable[schema.RunCompStatus]:
+        subscription = self.ws_client.subscribe(
+            client.subscribe_to_status,
+            variable_values={"run_id": run_id}
+        )
+        for result in subscription:
+            for run_status in result["runStatus"]:
+                yield schema.RunCompStatus(
+                    in_flow_comp_id=run_status["app"]["inFlowCompUid"],
+                    in_flow_app_id=run_status["app"]["inFlowAppId"],
+                    status=run_status["app"]["status"],
+                )
+
+    def _recursively_extract_flow(self, flow_id) -> list[tuple[str, str]]:
+        fl = self.get_flow(flow_id)
+        components = []
+        for comp in fl.components:
+            if comp.flow is not None:
+                components.extend(self._recursively_extract_flow(comp.flow))
+            else:
+                components.append((comp.uid, comp.alias,))
+        return components
+
     def get_snapshot_components(self, run_id: str) -> dict[str, str]:
         results = self.client.execute(client.get_run_snapshot_components, variable_values={
             'run_id': run_id
         })
 
         components = results['run']['task']['snapshot']['inFlowComponents']['edges']
-        return {
+        flows = [
+            c['node']['flow']['parentFlow']['details']['uid']
+            for c in components
+            if c['node']['flow']
+        ]
+
+        dict_ =  {
             c['node']['details']['alias']: c['node']['details']['uid']
             for c in components
         }
+
+        for f_ in flows:
+            dict_.update({
+                c[1]: c[0]
+                for c in self._recursively_extract_flow(f_)
+            })
+
+        return dict_
 
     def malevich(self, prompt: str, max_depth: int = 1) -> tuple[str, str]:
         res = self.client.execute(
