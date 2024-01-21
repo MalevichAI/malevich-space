@@ -130,7 +130,7 @@ def endpoint(
 ):
     roller = local_roller(setup, None)
     uid, url = roller.space.create_endpoint(task_id=task_id, alias=alias, token=token)
-    logging.info(f">> Endpoint created - {url}")
+    logging.info(f">> Endpoint created ({uid}) - {url}")
 
 
 @app.command()
@@ -141,3 +141,14 @@ def wipe(reverse_id: str, setup: Optional[str] = typer.Option(None, help=SETUP_H
         logging.info(f">> {reverse_id} successfully wiped")
     except Exception as e:
         logging.exception(f"Failed to wipe {reverse_id} ({e})")
+
+
+@app.command()
+def endpoint_update(
+    endpoint_id: str,
+    new_task_id: str,
+    setup: Optional[str] = typer.Option(None, help=SETUP_HELP)
+):
+    roller = local_roller(setup, None)
+    roller.space.update_endpoint(endpoint_id=endpoint_id, new_task_id=new_task_id)
+    logging.info(f">> Endpoint now points to {new_task_id}")

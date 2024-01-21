@@ -7,15 +7,19 @@ invoke_component = gql(
         $component: String!,
         $branch: String,
         $payload: [InvokeFlowRunPayload!]!,
-        $webhook: [String!]
+        $webhook: [String!],
+        $org_id: String
     ) {
         invoke(
-            componentId: $component,
-            branch: $branch,
+            metadata: {
+                componentId: $component,
+                branchName: $branch
+            }
             input: {
                 webhook: $webhook
                 payload: $payload
-            }
+            },
+            orgId: $org_id
         ) {
             task {
                 details {

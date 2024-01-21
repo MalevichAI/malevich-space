@@ -214,3 +214,13 @@ class BaseService(ABC):
     @abstractmethod
     def create_endpoint(self, task_id: str, alias: str | None, token: str | None) -> str:
         raise NotImplementedError
+    
+    @abstractmethod
+    def create_asset(
+            self,
+            *,
+            core_path: str,
+            is_composite: bool = False,
+            host_id: str | None = None
+    ) -> tuple[str, str]:
+        raise NotImplementedError

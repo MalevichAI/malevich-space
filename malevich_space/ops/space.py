@@ -584,6 +584,12 @@ class SpaceOps(BaseService):
         core_url = result["task"]["createEndpoint"]["invokationUrl"]
         return endpoint_uid, core_url
     
+    def update_endpoint(self, endpoint_id: str, new_task_id: str):
+        result = self.client.execute(client.update_endpoint_in_task, variable_values={
+            "endpoint_id": endpoint_id,
+            "task_id": new_task_id
+        })
+    
     def invoke(self, component: str, payload: schema.InvokePayload, branch: str | None = None) -> tuple[str, str] | None:
         kwargs = {
             "component": component,
@@ -591,7 +597,7 @@ class SpaceOps(BaseService):
             "payload": [p.model_dump() for p in payload.payload],
             "webhook": payload.webhook
         }
-        result = self.client.execute(client.invoke_component, variable_values=kwargs)
+        result = self._org_request(client.invoke_component, variable_values=kwargs)
         if result["invoke"] is None:
             return None
         task = result["invoke"]["task"]
@@ -608,3 +614,23 @@ class SpaceOps(BaseService):
             return None
         return result["component"]["addToOrg"]["details"]["uid"]
     
+    def create_asset(
+            self,
+            *,
+            core_path: str,
+            is_composite: bool = False,
+            host_id: str | None = None
+    ) -> tuple[str, str]:
+        kwargs = {
+            "core_path": core_path,
+            "is_composite": is_composite,
+            "host_id": host_id
+        }
+        result = self._org_request(client.create_asset, variable_values=kwargs)
+        uid = result["assets"]["create"]["details"]["uid"]
+        upload_url = result["assets"]["create"]["uploadUrl"]
+        return uid, upload_url
+    
+    def get_asset(self, *, uid: str) -> tuple[dict[str, Any], str, str]:
+        result = self.client.execute(client.get_asset, variable_values={"uid": uid})
+        return result["asset"]["details"], result["asset"]["downloadUrl"], result["asset"]["uploadUrl"]
