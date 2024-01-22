@@ -617,20 +617,33 @@ class SpaceOps(BaseService):
     def create_asset(
             self,
             *,
-            core_path: str,
-            is_composite: bool = False,
+            asset: schema.CreateAsset,
             host_id: str | None = None
     ) -> tuple[str, str]:
-        kwargs = {
-            "core_path": core_path,
-            "is_composite": is_composite,
-            "host_id": host_id
-        }
+        kwargs = asset.model_dump()
+        kwargs["host_id"] = host_id
         result = self._org_request(client.create_asset, variable_values=kwargs)
-        uid = result["assets"]["create"]["details"]["uid"]
-        upload_url = result["assets"]["create"]["uploadUrl"]
-        return uid, upload_url
+        return self._parse_asset(result["assets"]["create"])
     
-    def get_asset(self, *, uid: str) -> tuple[dict[str, Any], str, str]:
+    def _parse_asset(self, asset: dict[str, Any]) -> schema.Asset:
+        raw = asset["details"]
+        raw["core_path"] = raw["corePath"]
+        raw["is_composite"] = raw["isComposite"]
+        if "downloadUrl" in asset:
+            raw["download_url"] = asset["downloadUrl"]
+        if "uploadUrl" in asset:
+            raw["upload_url"] = asset["uploadUrl"]
+        return schema.Asset.model_validate(raw)
+    
+    def get_asset(self, *, uid: str) -> schema.Asset:
         result = self.client.execute(client.get_asset, variable_values={"uid": uid})
-        return result["asset"]["details"], result["asset"]["downloadUrl"], result["asset"]["uploadUrl"]
+        return self._parse_asset(result["asset"])
+    
+    def create_asset_in_version(
+            self, *, version_id: str, asset: schema.CreateAsset, host_id: str | None = None
+    ) -> schema.Asset:
+        kwargs = asset.model_dump()
+        kwargs["version_id"] = version_id
+        kwargs["host_id"] = host_id
+        result = self._org_request(client.create_asset_in_version, variable_values=kwargs)
+        return self._parse_asset(result["version"]["createUnderlyingAsset"])

@@ -8,6 +8,7 @@ get_asset = gql(
             details {
                 uid
                 corePath
+                checksum
                 isComposite
             }
             downloadUrl

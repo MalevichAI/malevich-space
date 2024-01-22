@@ -152,3 +152,20 @@ def endpoint_update(
     roller = local_roller(setup, None)
     roller.space.update_endpoint(endpoint_id=endpoint_id, new_task_id=new_task_id)
     logging.info(f">> Endpoint now points to {new_task_id}")
+
+
+@app.command()
+def asset(
+    component: str,
+    local_path: str,
+    core_path: str,
+    version: Optional[str] = typer.Argument(None, help="Version ID to attach. Active version by default"),
+    setup: Optional[str] = typer.Option(None, help=SETUP_HELP)
+):
+    roller = local_roller(setup, None)
+    if not version:
+        loaded = roller.space.get_parsed_component_by_reverse_id(reverse_id=component)
+        version = loaded.version.uid
+    asset = roller.space.create_asset_in_version(version_id=version, asset=schema.CreateAsset(core_path=core_path, is_composite=False))
+    logging.info(f">> Asset ({asset.uid}) is linked to {core_path}")
+    logging.info(f">> Upload: {asset.upload_url}")

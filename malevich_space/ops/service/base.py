@@ -219,8 +219,7 @@ class BaseService(ABC):
     def create_asset(
             self,
             *,
-            core_path: str,
-            is_composite: bool = False,
+            asset: schema.CreateAsset,
             host_id: str | None = None
-    ) -> tuple[str, str]:
+    ) -> schema.Asset:
         raise NotImplementedError

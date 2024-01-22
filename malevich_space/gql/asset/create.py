@@ -20,6 +20,9 @@ create_asset = gql(
             ) {
                 details {
                     uid
+                    checksum
+                    corePath
+                    isComposite
                 }
                 uploadUrl
             }

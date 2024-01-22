@@ -22,3 +22,5 @@ from .stand import *
 
 from .payload import *
 from .result import *
+
+from .asset import *

@@ -19,14 +19,14 @@ app = typer.Typer()
 @app.command()
 def upload(local_path: str, core_path: str, setup: Optional[str] = typer.Option(None, help=SETUP_HELP)):
     roller = local_roller(setup, None)
-    asset_id, upload_url = roller.space.create_asset(core_path=core_path)
-    logging.info(f"{core_path} will be linked to asset in space - {asset_id}")
+    asset = roller.space.create_asset(core_path=schema.CreateAsset(core_path=core_path))
+    logging.info(f"{core_path} will be linked to asset in space - {asset.uid}")
 
 
 @app.command()
 def get(uid: str, setup: Optional[str] = typer.Option(None, help=SETUP_HELP)):
     roller = local_roller(setup, None)
-    asset, download_url, upload_url = roller.space.get_asset(uid=uid)
-    logging.info(f"Asset ({uid}) - {asset['corePath']} exists")
-    logging.info(f"Download: {download_url}")
-    logging.info(f"Upload: {upload_url}")
+    asset = roller.space.get_asset(uid=uid)
+    logging.info(f"Asset ({uid}) - {asset.core_path} exists")
+    logging.info(f"Download: {asset.download_url}")
+    logging.info(f"Upload: {asset.upload_url}")
