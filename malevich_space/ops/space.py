@@ -607,7 +607,7 @@ class SpaceOps(BaseService):
 
         return outputs
 
-    def create_endpoint(self, task_id: str, alias: str | None, token: str | None) -> str:
+    def create_endpoint(self, task_id: str, alias: str | None, token: str | None) -> tuple[str, str]:
         kwargs = {
             "task_id": task_id,
             "alias": alias,
@@ -617,7 +617,15 @@ class SpaceOps(BaseService):
             token_id = self.get_api_token_by_name(name=token)
             kwargs["api_key"] = [token_id]
         result = self.client.execute(client.create_task_endpoint, variable_values=kwargs)
-        return result["task"]["createEndpoint"]["details"]["uid"]
+        endpoint_uid = result["task"]["createEndpoint"]["details"]["uid"]
+        core_url = result["task"]["createEndpoint"]["invokationUrl"]
+        return endpoint_uid, core_url
+    
+    def update_endpoint(self, endpoint_id: str, new_task_id: str):
+        result = self.client.execute(client.update_endpoint_in_task, variable_values={
+            "endpoint_id": endpoint_id,
+            "task_id": new_task_id
+        })
     
     def invoke(self, component: str, payload: schema.InvokePayload, branch: str | None = None) -> tuple[str, str] | None:
         kwargs = {
@@ -626,7 +634,7 @@ class SpaceOps(BaseService):
             "payload": [p.model_dump() for p in payload.payload],
             "webhook": payload.webhook
         }
-        result = self.client.execute(client.invoke_component, variable_values=kwargs)
+        result = self._org_request(client.invoke_component, variable_values=kwargs)
         if result["invoke"] is None:
             return None
         task = result["invoke"]["task"]
@@ -643,3 +651,36 @@ class SpaceOps(BaseService):
             return None
         return result["component"]["addToOrg"]["details"]["uid"]
     
+    def create_asset(
+            self,
+            *,
+            asset: schema.CreateAsset,
+            host_id: str | None = None
+    ) -> tuple[str, str]:
+        kwargs = asset.model_dump()
+        kwargs["host_id"] = host_id
+        result = self._org_request(client.create_asset, variable_values=kwargs)
+        return self._parse_asset(result["assets"]["create"])
+    
+    def _parse_asset(self, asset: dict[str, Any]) -> schema.Asset:
+        raw = asset["details"]
+        raw["core_path"] = raw["corePath"]
+        raw["is_composite"] = raw["isComposite"]
+        if "downloadUrl" in asset:
+            raw["download_url"] = asset["downloadUrl"]
+        if "uploadUrl" in asset:
+            raw["upload_url"] = asset["uploadUrl"]
+        return schema.Asset.model_validate(raw)
+    
+    def get_asset(self, *, uid: str) -> schema.Asset:
+        result = self.client.execute(client.get_asset, variable_values={"uid": uid})
+        return self._parse_asset(result["asset"])
+    
+    def create_asset_in_version(
+            self, *, version_id: str, asset: schema.CreateAsset, host_id: str | None = None
+    ) -> schema.Asset:
+        kwargs = asset.model_dump()
+        kwargs["version_id"] = version_id
+        kwargs["host_id"] = host_id
+        result = self._org_request(client.create_asset_in_version, variable_values=kwargs)
+        return self._parse_asset(result["version"]["createUnderlyingAsset"])

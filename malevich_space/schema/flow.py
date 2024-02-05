@@ -14,6 +14,7 @@ class SchemaAlias(BaseModel):
 class Terminal(BaseModel):
     src: str
     target: str
+    order: int | None = None
 
 
 class InFlowDependency(BaseModel):

@@ -12,3 +12,5 @@ from .run_shaphost_components import *
 from .status import *
 
 from .build_v2 import *
+
+from .update_endpoint_task import *
