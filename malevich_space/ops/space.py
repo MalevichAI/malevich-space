@@ -10,6 +10,7 @@ from graphql import DocumentNode, ExecutionResult
 
 import malevich_space.gql as client
 import malevich_space.schema as schema
+from ..schema.flow import LoadedInFlowCollectionSchema
 
 from .service import BaseService
 
@@ -58,7 +59,7 @@ class SpaceOps(BaseService):
         ws_url = self.space_setup.ws_url()
         ws_transport = Client(
             transport=WebsocketsTransport(url=ws_url),
-            fetch_schema_from_transport=True,
+            # fetch_schema_from_transport=True,
             execute_timeout=60
         ) if ws_url else None
 
@@ -373,6 +374,12 @@ class SpaceOps(BaseService):
                 self._parse_in_flow_component(prev["node"])
                 for prev in in_flow_data["node"]["prev"]["edges"]
             ]
+        try:
+            base_data['collection'] = LoadedInFlowCollectionSchema(
+                collection_id=in_flow_data['node']['collectionAlias']['details']['uid']
+            )
+        except (KeyError, ValueError, TypeError):
+            pass
         return schema.LoadedInFlowComponentSchema(**base_data)
 
     def _parse_comp(self, comp: dict[str, Any]) -> schema.LoadedComponentSchema:
@@ -435,18 +442,50 @@ class SpaceOps(BaseService):
             ]
         )
 
-    def subscribe_to_status(self, run_id: str) -> Iterable[schema.RunCompStatus]:
+    def subscribe_to_status(self, run_id: str) -> Iterable[schema.RunCompStatus | str]:
         subscription = self.ws_client.subscribe(
             client.subscribe_to_status,
             variable_values={"run_id": run_id}
         )
+        
         for result in subscription:
             for run_status in result["runStatus"]:
-                yield schema.RunCompStatus(
-                    in_flow_comp_id=run_status["app"]["inFlowCompUid"],
-                    in_flow_app_id=run_status["app"]["inFlowAppId"],
-                    status=run_status["app"]["status"],
+                if (
+                    'task' in run_status
+                    and run_status['task']
+                    and 'status' in run_status['task']
+                    and run_status['task']['status']
+                ):
+                    yield run_status['task']['status']
+
+                elif 'app' in run_status:
+                    yield schema.RunCompStatus(
+                        in_flow_comp_id=run_status["app"]["inFlowCompUid"],
+                        in_flow_app_id=run_status["app"]["inFlowAppId"],
+                        status=run_status["app"]["status"],
+                    )
+        try:
+            subscription.close()
+        except (Exception, KeyboardInterrupt):
+            pass
+
+
+    def get_run_status(self, run_id: str) -> tuple[str, list[schema.RunCompStatus]]:
+        result = self.client.execute(
+            client.get_run_status,
+            variable_values={"run_id": run_id}
+        )['run']
+        run_status = result['details']['state']
+        component_statuses = []
+        for in_flow_status in result['state']['edges']:
+            component_statuses.append(
+                schema.RunCompStatus(
+                    in_flow_comp_id=in_flow_status['node']['uid'],
+                    in_flow_comp_alias=in_flow_status['node']['alias'],
+                    status=in_flow_status['rel']['status']
                 )
+            )
+        return run_status, component_statuses
 
     def _recursively_extract_flow(self, flow_id) -> list[tuple[str, str]]:
         fl = self.get_flow(flow_id)
@@ -464,22 +503,22 @@ class SpaceOps(BaseService):
         })
 
         components = results['run']['task']['snapshot']['inFlowComponents']['edges']
-        flows = [
-            c['node']['flow']['parentFlow']['details']['uid']
-            for c in components
-            if c['node']['flow']
-        ]
+        # flows = [
+        #     c['node']['flow']['parentFlow']['details']['uid']
+        #     for c in components
+        #     if c['node']['flow']
+        # ]
 
         dict_ =  {
             c['node']['details']['alias']: c['node']['details']['uid']
             for c in components
         }
 
-        for f_ in flows:
-            dict_.update({
-                c[1]: c[0]
-                for c in self._recursively_extract_flow(f_)
-            })
+        # for f_ in flows:
+        #     dict_.update({
+        #         c[1]: c[0]
+        #         for c in self._recursively_extract_flow(f_)
+        #     })
 
         return dict_
 
