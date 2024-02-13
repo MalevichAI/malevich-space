@@ -1,4 +1,4 @@
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Iterable, Optional, Union, overload
 
 import json
 import requests
@@ -442,13 +442,13 @@ class SpaceOps(BaseService):
             ]
         )
 
-    def subscribe_to_status(self, run_id: str) -> Iterable[schema.RunCompStatus | str]:
-        subscription = self.ws_client.subscribe(
+    async def subscribe_to_status(self, run_id: str) -> Iterable[schema.RunCompStatus | str]:
+        subscription = self.ws_client.subscribe_async(
             client.subscribe_to_status,
             variable_values={"run_id": run_id}
         )
-        
-        for result in subscription:
+
+        async for result in subscription:
             for run_status in result["runStatus"]:
                 if (
                     'task' in run_status
@@ -497,30 +497,46 @@ class SpaceOps(BaseService):
                 components.append((comp.uid, comp.alias,))
         return components
 
-    def get_snapshot_components(self, run_id: str) -> dict[str, str]:
-        results = self.client.execute(client.get_run_snapshot_components, variable_values={
-            'run_id': run_id
-        })
+    @overload
+    def get_snapshot_components(self, /, task_id: str) -> dict[str, str]:
+        pass
 
-        components = results['run']['task']['snapshot']['inFlowComponents']['edges']
-        # flows = [
-        #     c['node']['flow']['parentFlow']['details']['uid']
-        #     for c in components
-        #     if c['node']['flow']
-        # ]
+    @overload
+    def get_snapshot_components(self, /, run_id: str) -> dict[str, str]:
+        pass
 
-        dict_ =  {
-            c['node']['details']['alias']: c['node']['details']['uid']
-            for c in components
-        }
+    def get_snapshot_components(
+        self, *, run_id: str = None, task_id = None
+    ) -> dict[str, str]:
+        if run_id is not None:
+            results = self.client.execute(
+                client.get_run_snapshot_components, variable_values={
+                'run_id': run_id
+            })
 
-        # for f_ in flows:
-        #     dict_.update({
-        #         c[1]: c[0]
-        #         for c in self._recursively_extract_flow(f_)
-        #     })
+            components = results['run']['task']['snapshot']['inFlowComponents']['edges']
+            dict_ =  {
+                c['node']['details']['alias']: c['node']['details']['uid']
+                for c in components
+            }
 
-        return dict_
+            return dict_
+        elif task_id is not None:
+            results = self.client.execute(
+                client.get_task_snapshot_component, variable_values={
+                'task_id': task_id
+            })
+
+            components = results['task']['snapshot']['inFlowComponents']['edges']
+            dict_ =  {
+                c['node']['details']['alias']: c['node']['details']['uid']
+                for c in components
+            }
+
+            return dict_
+        else:
+            raise ValueError("Either task_id or run_id should be passed")
+
 
     def malevich(self, prompt: str, max_depth: int = 1) -> tuple[str, str]:
         res = self.client.execute(
