@@ -23,3 +23,24 @@ get_run_snapshot_components = gql(
     }
     """
 )
+
+get_task_snapshot_component = gql(
+    """
+    query GetTaskSnapshotComponents($task_id: String!) {
+        task(uid: $task_id) {
+            snapshot {
+                inFlowComponents {
+                    edges {
+                        node {
+                            details {
+                                uid
+                                alias
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    """
+)

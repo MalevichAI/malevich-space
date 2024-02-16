@@ -14,6 +14,7 @@ create_task_endpoint = gql(
           details {
             uid
           }
+          invokationUrl
           addApiKey(apiKeyIds: $api_key) {
             details {
               uid

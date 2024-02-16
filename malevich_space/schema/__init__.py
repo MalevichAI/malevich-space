@@ -23,3 +23,5 @@ from .stand import *
 from .payload import *
 from .result import *
 from .run_app_status import *
+
+from .asset import *

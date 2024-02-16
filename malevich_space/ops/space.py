@@ -1,4 +1,4 @@
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Iterable, Optional, Union, overload
 
 import json
 import requests
@@ -10,6 +10,7 @@ from graphql import DocumentNode, ExecutionResult
 
 import malevich_space.gql as client
 import malevich_space.schema as schema
+from ..schema.flow import LoadedInFlowCollectionSchema
 
 from .service import BaseService
 
@@ -58,7 +59,7 @@ class SpaceOps(BaseService):
         ws_url = self.space_setup.ws_url()
         ws_transport = Client(
             transport=WebsocketsTransport(url=ws_url),
-            fetch_schema_from_transport=True,
+            # fetch_schema_from_transport=True,
             execute_timeout=60
         ) if ws_url else None
 
@@ -373,6 +374,12 @@ class SpaceOps(BaseService):
                 self._parse_in_flow_component(prev["node"])
                 for prev in in_flow_data["node"]["prev"]["edges"]
             ]
+        try:
+            base_data['collection'] = LoadedInFlowCollectionSchema(
+                collection_id=in_flow_data['node']['collectionAlias']['details']['uid']
+            )
+        except (KeyError, ValueError, TypeError):
+            pass
         return schema.LoadedInFlowComponentSchema(**base_data)
 
     def _parse_comp(self, comp: dict[str, Any]) -> schema.LoadedComponentSchema:
@@ -435,18 +442,50 @@ class SpaceOps(BaseService):
             ]
         )
 
-    def subscribe_to_status(self, run_id: str) -> Iterable[schema.RunCompStatus]:
-        subscription = self.ws_client.subscribe(
+    async def subscribe_to_status(self, run_id: str) -> Iterable[schema.RunCompStatus | str]:
+        subscription = self.ws_client.subscribe_async(
             client.subscribe_to_status,
             variable_values={"run_id": run_id}
         )
-        for result in subscription:
+
+        async for result in subscription:
             for run_status in result["runStatus"]:
-                yield schema.RunCompStatus(
-                    in_flow_comp_id=run_status["app"]["inFlowCompUid"],
-                    in_flow_app_id=run_status["app"]["inFlowAppId"],
-                    status=run_status["app"]["status"],
+                if (
+                    'task' in run_status
+                    and run_status['task']
+                    and 'status' in run_status['task']
+                    and run_status['task']['status']
+                ):
+                    yield run_status['task']['status']
+
+                elif 'app' in run_status:
+                    yield schema.RunCompStatus(
+                        in_flow_comp_id=run_status["app"]["inFlowCompUid"],
+                        in_flow_app_id=run_status["app"]["inFlowAppId"],
+                        status=run_status["app"]["status"],
+                    )
+        try:
+            subscription.close()
+        except (Exception, KeyboardInterrupt):
+            pass
+
+
+    def get_run_status(self, run_id: str) -> tuple[str, list[schema.RunCompStatus]]:
+        result = self.client.execute(
+            client.get_run_status,
+            variable_values={"run_id": run_id}
+        )['run']
+        run_status = result['details']['state']
+        component_statuses = []
+        for in_flow_status in result['state']['edges']:
+            component_statuses.append(
+                schema.RunCompStatus(
+                    in_flow_comp_id=in_flow_status['node']['uid'],
+                    in_flow_comp_alias=in_flow_status['node']['alias'],
+                    status=in_flow_status['rel']['status']
                 )
+            )
+        return run_status, component_statuses
 
     def _recursively_extract_flow(self, flow_id) -> list[tuple[str, str]]:
         fl = self.get_flow(flow_id)
@@ -458,30 +497,46 @@ class SpaceOps(BaseService):
                 components.append((comp.uid, comp.alias,))
         return components
 
-    def get_snapshot_components(self, run_id: str) -> dict[str, str]:
-        results = self.client.execute(client.get_run_snapshot_components, variable_values={
-            'run_id': run_id
-        })
+    @overload
+    def get_snapshot_components(self, /, task_id: str) -> dict[str, str]:
+        pass
 
-        components = results['run']['task']['snapshot']['inFlowComponents']['edges']
-        flows = [
-            c['node']['flow']['parentFlow']['details']['uid']
-            for c in components
-            if c['node']['flow']
-        ]
+    @overload
+    def get_snapshot_components(self, /, run_id: str) -> dict[str, str]:
+        pass
 
-        dict_ =  {
-            c['node']['details']['alias']: c['node']['details']['uid']
-            for c in components
-        }
-
-        for f_ in flows:
-            dict_.update({
-                c[1]: c[0]
-                for c in self._recursively_extract_flow(f_)
+    def get_snapshot_components(
+        self, *, run_id: str = None, task_id = None
+    ) -> dict[str, str]:
+        if run_id is not None:
+            results = self.client.execute(
+                client.get_run_snapshot_components, variable_values={
+                'run_id': run_id
             })
 
-        return dict_
+            components = results['run']['task']['snapshot']['inFlowComponents']['edges']
+            dict_ =  {
+                c['node']['details']['alias']: c['node']['details']['uid']
+                for c in components
+            }
+
+            return dict_
+        elif task_id is not None:
+            results = self.client.execute(
+                client.get_task_snapshot_component, variable_values={
+                'task_id': task_id
+            })
+
+            components = results['task']['snapshot']['inFlowComponents']['edges']
+            dict_ =  {
+                c['node']['details']['alias']: c['node']['details']['uid']
+                for c in components
+            }
+
+            return dict_
+        else:
+            raise ValueError("Either task_id or run_id should be passed")
+
 
     def malevich(self, prompt: str, max_depth: int = 1) -> tuple[str, str]:
         res = self.client.execute(
@@ -607,7 +662,7 @@ class SpaceOps(BaseService):
 
         return outputs
 
-    def create_endpoint(self, task_id: str, alias: str | None, token: str | None) -> str:
+    def create_endpoint(self, task_id: str, alias: str | None, token: str | None) -> tuple[str, str]:
         kwargs = {
             "task_id": task_id,
             "alias": alias,
@@ -617,7 +672,15 @@ class SpaceOps(BaseService):
             token_id = self.get_api_token_by_name(name=token)
             kwargs["api_key"] = [token_id]
         result = self.client.execute(client.create_task_endpoint, variable_values=kwargs)
-        return result["task"]["createEndpoint"]["details"]["uid"]
+        endpoint_uid = result["task"]["createEndpoint"]["details"]["uid"]
+        core_url = result["task"]["createEndpoint"]["invokationUrl"]
+        return endpoint_uid, core_url
+    
+    def update_endpoint(self, endpoint_id: str, new_task_id: str):
+        result = self.client.execute(client.update_endpoint_in_task, variable_values={
+            "endpoint_id": endpoint_id,
+            "task_id": new_task_id
+        })
     
     def invoke(self, component: str, payload: schema.InvokePayload, branch: str | None = None) -> tuple[str, str] | None:
         kwargs = {
@@ -626,7 +689,7 @@ class SpaceOps(BaseService):
             "payload": [p.model_dump() for p in payload.payload],
             "webhook": payload.webhook
         }
-        result = self.client.execute(client.invoke_component, variable_values=kwargs)
+        result = self._org_request(client.invoke_component, variable_values=kwargs)
         if result["invoke"] is None:
             return None
         task = result["invoke"]["task"]
@@ -643,3 +706,36 @@ class SpaceOps(BaseService):
             return None
         return result["component"]["addToOrg"]["details"]["uid"]
     
+    def create_asset(
+            self,
+            *,
+            asset: schema.CreateAsset,
+            host_id: str | None = None
+    ) -> tuple[str, str]:
+        kwargs = asset.model_dump()
+        kwargs["host_id"] = host_id
+        result = self._org_request(client.create_asset, variable_values=kwargs)
+        return self._parse_asset(result["assets"]["create"])
+    
+    def _parse_asset(self, asset: dict[str, Any]) -> schema.Asset:
+        raw = asset["details"]
+        raw["core_path"] = raw["corePath"]
+        raw["is_composite"] = raw["isComposite"]
+        if "downloadUrl" in asset:
+            raw["download_url"] = asset["downloadUrl"]
+        if "uploadUrl" in asset:
+            raw["upload_url"] = asset["uploadUrl"]
+        return schema.Asset.model_validate(raw)
+    
+    def get_asset(self, *, uid: str) -> schema.Asset:
+        result = self.client.execute(client.get_asset, variable_values={"uid": uid})
+        return self._parse_asset(result["asset"])
+    
+    def create_asset_in_version(
+            self, *, version_id: str, asset: schema.CreateAsset, host_id: str | None = None
+    ) -> schema.Asset:
+        kwargs = asset.model_dump()
+        kwargs["version_id"] = version_id
+        kwargs["host_id"] = host_id
+        result = self._org_request(client.create_asset_in_version, variable_values=kwargs)
+        return self._parse_asset(result["version"]["createUnderlyingAsset"])

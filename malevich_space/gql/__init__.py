@@ -8,3 +8,5 @@ from .task import *
 from .use_case import *
 
 from .api_key import *
+
+from .asset import *

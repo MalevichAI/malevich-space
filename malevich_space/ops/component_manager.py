@@ -1,3 +1,4 @@
+import os
 import re
 import json
 import logging
@@ -142,7 +143,6 @@ class ComponentManager:
             if loaded_comp_type == schema.ComponentType.APP:
                 if comp.app and comp.app.active_op:
                     ops = self._get_ops(loaded_comp.app.ops, comp.app.active_op)
-            print(comp.alias)
             comp_in_flow_id = self.space.add_comp_in_flow(
                 alias=comp.alias,
                 flow_id=flow_id,
@@ -192,7 +192,7 @@ class ComponentManager:
                             as_collection=dep.as_collection,
                             start_terminal_id=terminal.src,
                             target_terminal_id=terminal.target,
-                            order=dep.order
+                            order=terminal.order if terminal.order else dep.order
                         )
                 else:
                     self.space.link(
@@ -229,7 +229,7 @@ class ComponentManager:
         collection: schema.CollectionAliasSchema,
         attach2version_id: str,
     ) -> schema.LoadedComponentSchema | None:
-        src_collection_at_path = f"{self.comp_dir}/{collection.path}"
+        src_collection_at_path = os.path.join(self.comp_dir, collection.path)
         docs = self._get_json_docs(self._get_df(src_collection_at_path))
         ca_id = self.space.create_collection(
             host_id=self.host.uid,
