@@ -1,3 +1,4 @@
+import os
 import re
 import json
 import logging
@@ -228,7 +229,7 @@ class ComponentManager:
         collection: schema.CollectionAliasSchema,
         attach2version_id: str,
     ) -> schema.LoadedComponentSchema | None:
-        src_collection_at_path = f"{self.comp_dir}/{collection.path}"
+        src_collection_at_path = os.path.join(self.comp_dir, collection.path)
         docs = self._get_json_docs(self._get_df(src_collection_at_path))
         ca_id = self.space.create_collection(
             host_id=self.host.uid,
