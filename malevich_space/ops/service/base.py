@@ -97,6 +97,7 @@ class BaseService(ABC):
             core_id: Optional[str] = None,
             core_alias: Optional[str] = None,
             schema_core_id: Optional[str] = None,
+            org_id: Optional[str] = None,
             *args, **kwargs
     ):
         raise NotImplementedError("Method not implemented")

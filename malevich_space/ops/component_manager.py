@@ -231,11 +231,13 @@ class ComponentManager:
     ) -> schema.LoadedComponentSchema | None:
         src_collection_at_path = os.path.join(self.comp_dir, collection.path)
         docs = self._get_json_docs(self._get_df(src_collection_at_path))
+        print(self.space.org_id())
         ca_id = self.space.create_collection(
             host_id=self.host.uid,
             core_alias=collection.core_alias,
             schema_core_id=collection.schema_core_id,
-            docs=docs
+            docs=docs,
+            org_id=self.space.org_id(),
         )
         self.space.create_collection_in_version(version_id=attach2version_id, ca_id=ca_id)
         return self.space.get_parsed_component_by_reverse_id(reverse_id=reverse_id)

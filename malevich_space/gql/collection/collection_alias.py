@@ -8,10 +8,11 @@ create_collection_alias = gql(
         $core_id: String,
         $core_alias: String,
         $schema_core_id: String,
+        $org_id: String,
         $docs: [String!]
     ) {
       collectionAliases {
-        create(docs: $docs, hostId: $host_id, input: {
+        create(docs: $docs, hostId: $host_id, orgId: $org_id, input: {
           node: {
             coreId: $core_id
             coreAlias: $core_alias
