@@ -1,15 +1,17 @@
 import json
 import logging
 
-from typing import Any
+from typing import Any, Type
 
 import malevich_space.schema as schema
 
 from malevich_space.parser import YAMLParser
 from malevich_space.constants import ACTIVE_SETUP_PATH
 
+from .service import BaseComponentManager
 from .space import SpaceOps
 from .component_provider import ComponentProvider
+
 from .component_manager import ComponentManager
 
 from .env import get_active
@@ -21,8 +23,12 @@ class RollerOps:
         config: schema.Setup,
         comp_dir: str,
         path: str | None = None,
-        comp_provider: ComponentProvider | None = None
+        comp_provider: ComponentProvider | None = None,
+        comp_manager_generator: Type[BaseComponentManager] | None = None
     ) -> None:
+        if not comp_manager_generator:
+            comp_manager_generator = ComponentManager
+
         logging.getLogger("gql.transport.requests").setLevel(logging.ERROR)
 
         self.config = config
@@ -38,7 +44,7 @@ class RollerOps:
             self.comp_provider = ComponentProvider()
             self.comp_provider.add_provider(ComponentProvider.get_yaml_provider(path))
 
-        self.comp_manager = ComponentManager(
+        self.comp_manager: BaseComponentManager = comp_manager_generator(
             space=self.space,
             host=self.host,
             comp_dir=comp_dir,
@@ -67,10 +73,14 @@ class RollerOps:
         self,
         comp: schema.ComponentSchema,
         version_mode: schema.VersionMode = schema.VersionMode.DEFAULT,
+        sync: bool = True
     ) -> schema.LoadedComponentSchema:
-        loaded = self.comp_manager.component(comp=comp, version_mode=version_mode)
-        logging.info(f"Component processed: {loaded}")
-        logging.info(f"|- Version: {loaded.version}")
+        loaded = self.comp_manager.component(comp=comp, version_mode=version_mode, sync=sync)
+        if type(loaded) == str:
+            logging.info(f"Component upload scheduled. Task ID: {loaded}")
+        else:
+            logging.info(f"Component processed: {loaded}")
+            logging.info(f"|- Version: {loaded.version}")
         return loaded
 
     def build(self, comp: schema.LoadedComponentSchema, ms_build: bool = True) -> list[str] | None:
