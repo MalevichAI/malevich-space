@@ -351,27 +351,39 @@ class SpaceOps(BaseService):
     def _parse_in_flow_component(
         self, in_flow_data: dict[str, Any]
     ) -> schema.LoadedInFlowComponentSchema:
+        def _safe(obj, *args):  # noqa: ANN202
+            _o = {**obj}
+            try:
+                for _a in args:
+                    _o = _o[_a]
+            except:  # noqa: E722
+                return None
+            return _o
+
         base_data = {
-            "uid": in_flow_data["node"]["details"]["uid"],
-            "alias": in_flow_data["node"]["details"]["alias"],
-            "app": self._parse_in_flow_app(in_flow_data["node"]["app"])
-            if "app" in in_flow_data["node"]
-            else None,
-            "prompt": self._parse_in_flow_prompt(in_flow_data["node"]["prompt"])
-            if "prompt" in in_flow_data["node"]
-            else None,
+            "uid": _safe(in_flow_data, "node", "details", "uid"),
+            "alias": _safe(in_flow_data, "node", "details", "alias"),
+            "app": (
+                self._parse_in_flow_app(in_flow_data["node"]["app"])
+                if "app" in in_flow_data["node"]
+                else None
+            ),
+            "prompt": (
+                self._parse_in_flow_prompt(in_flow_data["node"]["prompt"])
+                if "prompt" in in_flow_data["node"]
+                else None
+            )
         }
         if (
             "component" in in_flow_data["node"]
             and in_flow_data["node"]["component"] is not None
         ):
-            base_data["reverse_id"] = in_flow_data["node"]["component"]["details"][
-                "reverseId"
-            ]
+            base_data["reverse_id"] = in_flow_data["node"]["component"]["details"]["reverseId"]
             base_data["comp_id"] = in_flow_data["node"]["component"]["details"]["uid"]
+
         if "prev" in in_flow_data["node"]:
             base_data["prev"] = [
-                self._parse_in_flow_component(prev["node"])
+                self._parse_in_flow_component(prev)
                 for prev in in_flow_data["node"]["prev"]["edges"]
             ]
         try:
