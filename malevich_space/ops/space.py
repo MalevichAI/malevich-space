@@ -455,7 +455,12 @@ class SpaceOps(BaseService):
         )
 
     async def subscribe_to_status(self, run_id: str) -> Iterable[schema.RunCompStatus | str]:
-        subscription = self.ws_client.subscribe_async(
+        client_ = Client(
+            transport=WebsocketsTransport(url=self.space_setup.ws_url()),
+            execute_timeout=60
+        )
+
+        subscription = client_.subscribe_async(
             client.subscribe_to_status,
             variable_values={"run_id": run_id}
         )
