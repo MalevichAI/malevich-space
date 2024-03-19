@@ -7,6 +7,10 @@ import malevich_space.schema as schema
 class BaseService(ABC):
 
     @abstractmethod
+    def parse_raw(self, comp: schema.ComponentSchema, version_mode: schema.VersionMode, host_id: str | None = None) -> schema.LoadedComponentSchema:
+        raise NotImplementedError
+
+    @abstractmethod
     def create_host(self, alias: str, conn_url: str, *args, **kwargs):
         raise NotImplementedError("Method not implemented")
 
@@ -16,6 +20,10 @@ class BaseService(ABC):
     
     @abstractmethod
     def create_org(self, name: str, reverse_id: str) -> str:
+        raise NotImplementedError
+    
+    @abstractmethod
+    def invite_to_org(self, reverse_id: str, members: str) -> list[str]:
         raise NotImplementedError
     
     @abstractmethod
