@@ -16,8 +16,6 @@ class OpSchema(BaseModel):
     core_id: str
     type: str
 
-    input_schema: Sequence[str] = []
-    output_schema: Sequence[str] = []
     requires: Sequence[DepSchema] = []
 
 

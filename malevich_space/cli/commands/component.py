@@ -20,11 +20,12 @@ app = typer.Typer()
 def add(
     comp_dir: str,
     component: str,
+    sync: bool = True,
     setup: Optional[str] = typer.Option(None, help=SETUP_HELP),
 ):
     roller = local_roller(setup, comp_dir)
     comp = roller.comp_provider.get_by_reverse_id(component)
-    _ = roller.component(comp, version_mode=schema.VersionMode.MINOR)
+    _ = roller.component(comp, version_mode=schema.VersionMode.MINOR, sync=sync)
 
 
 @app.command()

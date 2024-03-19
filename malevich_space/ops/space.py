@@ -22,6 +22,18 @@ class SpaceOps(BaseService):
         self.client, self.ws_client = self.init_graphql()
         self.org = self.get_org(reverse_id=self.space_setup.org)
 
+    def parse_raw(self, comp: schema.ComponentSchema, version_mode: schema.VersionMode, host_id: str | None = None, sync: bool = True) -> schema.LoadedComponentSchema | str:
+        raw = comp.model_dump_json()
+        result = self._org_request(client.parse_raw_component, variable_values={
+            "raw_component": raw,
+            "version_mode": version_mode.value,
+            "host_id": host_id,
+            "sync": sync
+        })
+        if sync:
+            return self._parse_comp(result["components"]["createFromJson"])
+        return result["components"]["createFromJson"]["id"]
+
     def org_id(self) -> str | None:
         if self.org:
             return self.org.uid
